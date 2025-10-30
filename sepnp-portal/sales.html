@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>매출현황</title>
+  <link rel="stylesheet" href="assets/nav.css">
+  <style>
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans KR",sans-serif;background:#f5f6f8;color:#111;padding-top:60px}
+    .fixed-header{position:fixed;inset:0 0 auto 0;height:60px;background:#fff;border-bottom:1px solid #dee2e6;display:flex;align-items:center;padding:0 24px;z-index:100}
+    .fixed-header h1{margin:0;font-size:20px;font-weight:600;flex:1}
+    .header-tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .header-tabs a{padding:6px 12px;border-radius:6px;text-decoration:none;color:#495057;font-size:13px}
+    .header-tabs a.active{background:#0078d4;color:#fff}
+    .container{max-width:1200px;margin:24px auto;padding:0 16px}
+    .card{background:#fff;border:1px solid #dee2e6;border-radius:12px;padding:24px}
+    .btn-logout{margin-left:8px;border:1px solid #dee2e6;background:#fff;border-radius:6px;height:32px;padding:0 12px}
+  </style>
+</head>
+<body>
+  <header class="fixed-header"></header>
+<main class="container">
+  <div class="card">
+    <h2>매출현황</h2>
+    <p style="color:#666">기간별 매출 요약/그래프는 추후 구현합니다.</p>
+  </div>
+</main>
+<script src="assets/nav.js"></script>
+<script>
+  const empNo = sessionStorage.getItem('sepnp_emp_no');
+  if(!empNo) location.href='index.html';
+  document.getElementById('btnLogout').addEventListener('click',()=>{sessionStorage.removeItem('sepnp_emp_no');location.href='index.html';});
+</script>
+</body>
+</html>

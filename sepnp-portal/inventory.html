@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>재고 현황</title>
+  <link rel="stylesheet" href="assets/nav.css">
+  <style>
+    :root{ --bd:#e5e7eb; --fg:#111; --mut:#6b7280; --bg:#f5f6f8; --card:#fff; --primary:#2563eb; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+    .container{max-width:1200px;margin:24px auto;padding:0 16px}
+    h2{margin:0 0 14px;font-size:22px;font-weight:800}
+
+    .tabs{display:flex;gap:6px;margin-bottom:12px}
+    .tab{height:36px;padding:0 14px;border:1px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer}
+    .tab.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:12px}
+    .stat{background:#fafafa;border:1px solid var(--bd);border-radius:10px;padding:14px}
+    .stat .l{font-size:12px;color:var(--mut)}
+    .stat .v{margin-top:6px;font-size:22px;font-weight:800}
+
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .inp,.sel,.btn{height:36px;border:1px solid var(--bd);border-radius:8px;font-size:14px}
+    .inp{padding:8px 12px;background:#fff}
+    .sel{padding:0 10px;background:#fff}
+    .btn{padding:0 14px;background:#fff;cursor:pointer}
+    .btn:hover{background:#f3f4f6}
+    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+
+    .table-wrap{border:1px solid var(--bd);border-radius:10px;overflow:auto}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    thead{background:#f8f9fa}
+    th,td{padding:10px 12px;border-bottom:1px solid #f1f3f5;font-size:14px;white-space:nowrap}
+    tbody tr:hover{background:#fbfcfd}
+
+    .badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .ok{background:#d1fae5;color:#065f46}
+    .low{background:#fef3c7;color:#92400e}
+    .out{background:#fee2e2;color:#991b1b}
+  </style>
+</head>
+<body>
+  <header class="fixed-header"></header>
+
+  <main class="container">
+    <h2>재고 현황</h2>
+
+    <div class="tabs">
+      <button class="tab active" id="tabProduct" data-tab="product">제품 재고</button>
+      <button class="tab" id="tabPaper" data-tab="paper">용지 재고</button>
+    </div>
+
+    <section class="stats">
+      <div class="stat"><div class="l">전체 품목</div><div class="v" id="statTotal">0개</div></div>
+      <div class="stat"><div class="l">정상 재고</div><div class="v" id="statOk">0개</div></div>
+      <div class="stat"><div class="l">부족 품목</div><div class="v" id="statLow">0개</div></div>
+      <div class="stat"><div class="l">품절 품목</div><div class="v" id="statOut">0개</div></div>
+    </section>
+
+    <section class="card">
+      <div class="toolbar">
+        <input id="q" class="inp" style="flex:1;min-width:220px" placeholder="품목명, 규격, 거래처 검색..." />
+        <select id="grain" class="sel" style="display:none">
+          <option value="">결(전체)</option>
+          <option value="가로결">가로결</option>
+          <option value="세로결">세로결</option>
+        </select>
+        <select id="status" class="sel">
+          <option value="">상태(전체)</option>
+          <option value="ok">정상</option>
+          <option value="low">부족</option>
+          <option value="out">품절</option>
+        </select>
+        <button class="btn" id="btnSearch">검색</button>
+        <div style="flex:1"></div>
+        <button class="btn" id="btnExport">내보내기(CSV)</button>
+        <button class="btn primary" id="btnRegister">+ 재고 등록</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead id="thead"></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/nav.js"></script>
+  <script>
+    // 샘플 데이터
+    const SAMPLE_PRODUCTS = [
+      {name:'화장품 박스', length:200, width:120, height:60, vendor:'세팍패키지', qty:340, safety:100, unit:'개', lastIn:'2025-01-18'},
+      {name:'식품 박스',   length:180, width:100, height:80, vendor:'푸드팩',   qty:40,  safety:80,  unit:'개', lastIn:'2025-01-22'},
+      {name:'의류 택박스', length:90,  width:60,  height:40, vendor:'어패럴',   qty:0,   safety:50,  unit:'개', lastIn:'2024-12-30'},
+    ];
+    const SAMPLE_PAPERS = [
+      {name:'아트지 250g', width:900, height:600, grain:'세로결', vendor:'세팍상사', qty:1200, safety:500, unit:'매', lastIn:'2025-01-25'},
+      {name:'골판 A플루트', width:1200, height:800, grain:'가로결', vendor:'한국지류', qty:80, safety:100, unit:'매', lastIn:'2025-01-20'},
+      {name:'백판지 350g', width:800, height:500, grain:'세로결', vendor:'대한제지', qty:0, safety:200, unit:'매', lastIn:'2025-01-10'},
+    ];
+
+    const KEY_PRODUCTS = 'sepnp_inventory_products';
+    const KEY_PAPERS   = 'sepnp_inventory_papers';
+
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const activeTab = () => $('.tab.active')?.dataset.tab || 'product';
+
+    function load(key, sample){ 
+      const raw = JSON.parse(localStorage.getItem(key) || 'null'); 
+      return Array.isArray(raw) && raw.length ? raw : sample; 
+    }
+    function statusClass(qty, safety){ if(qty<=0) return 'out'; if(qty<safety) return 'low'; return 'ok'; }
+    function statusLabel(c){ return c==='ok'?'정상':c==='low'?'부족':'품절'; }
+    const fmtNum = v => Number(v||0).toLocaleString();
+    const fmtSize = (w,h) => `${fmtNum(w)}×${fmtNum(h)}mm`;
+    const fmtBox  = (l,w,h) => `${fmtNum(l)}×${fmtNum(w)}×${fmtNum(h)}mm`;
+
+    function renderHead(){
+      const tab = activeTab();
+      if(tab==='product'){
+        $('#thead').innerHTML = `
+          <tr>
+            <th>제품명</th><th>규격(장×폭×고)</th><th>거래처</th>
+            <th>현재고</th><th>안전재고</th><th>상태</th><th>최종입고일</th><th>관리</th>
+          </tr>`;
+      }else{
+        $('#thead').innerHTML = `
+          <tr>
+            <th>용지명</th><th>원단 크기</th><th>결</th><th>거래처</th>
+            <th>현재고</th><th>안전재고</th><th>상태</th><th>최종입고일</th><th>관리</th>
+          </tr>`;
+      }
+    }
+
+    function renderBody(){
+      const tab = activeTab();
+      const q = $('#q').value.trim().toLowerCase();
+      const stFilter = $('#status').value;
+      const gFilter  = $('#grain').value;
+
+      const list = tab==='product' ? load(KEY_PRODUCTS, SAMPLE_PRODUCTS) : load(KEY_PAPERS, SAMPLE_PAPERS);
+      const filtered = list.filter(it=>{
+        const text = (tab==='product'
+          ? `${it.name} ${it.vendor} ${fmtBox(it.length,it.width,it.height)}`
+          : `${it.name} ${it.vendor} ${fmtSize(it.width,it.height)} ${it.grain||''}`
+        ).toLowerCase();
+        const passQ  = !q || text.includes(q);
+        const st     = statusClass(it.qty, it.safety);
+        const passS  = !stFilter || st===stFilter;
+        const passG  = tab==='paper' ? (!gFilter || it.grain===gFilter) : true;
+        return passQ && passS && passG;
+      });
+
+      $('#tbody').innerHTML = filtered.map(it=>{
+        const st = statusClass(it.qty, it.safety);
+        if(tab==='product'){
+          return `
+            <tr>
+              <td>${it.name}</td>
+              <td>${fmtBox(it.length,it.width,it.height)}</td>
+              <td>${it.vendor||''}</td>
+              <td>${fmtNum(it.qty)}${it.unit||''}</td>
+              <td>${fmtNum(it.safety)}${it.unit||''}</td>
+              <td><span class="badge ${st}">${statusLabel(st)}</span></td>
+              <td>${it.lastIn||''}</td>
+              <td><button class="btn" style="height:28px;padding:0 10px;font-size:12px" onclick="editItem('${(it.name||'').replace(/'/g,'')}')">수정</button></td>
+            </tr>`;
+        } else {
+          return `
+            <tr>
+              <td>${it.name}</td>
+              <td>${fmtSize(it.width,it.height)}</td>
+              <td>${it.grain||''}</td>
+              <td>${it.vendor||''}</td>
+              <td>${fmtNum(it.qty)}${it.unit||''}</td>
+              <td>${fmtNum(it.safety)}${it.unit||''}</td>
+              <td><span class="badge ${st}">${statusLabel(st)}</span></td>
+              <td>${it.lastIn||''}</td>
+              <td><button class="btn" style="height:28px;padding:0 10px;font-size:12px" onclick="editItem('${(it.name||'').replace(/'/g,'')}')">수정</button></td>
+            </tr>`;
+        }
+      }).join('');
+
+      // 통계
+      const all = list;
+      $('#statTotal').textContent = `${all.length}개`;
+      $('#statOk').textContent  = `${all.filter(i=>statusClass(i.qty,i.safety)==='ok').length}개`;
+      $('#statLow').textContent = `${all.filter(i=>statusClass(i.qty,i.safety)==='low').length}개`;
+      $('#statOut').textContent = `${all.filter(i=>statusClass(i.qty,i.safety)==='out').length}개`;
+    }
+
+    function render(){
+      // 탭별 UI
+      const tab = activeTab();
+      $('#grain').style.display = tab==='paper' ? '' : 'none';
+      $('#btnRegister').onclick = () => {
+        const t = activeTab();
+        // 필요 시 각기 다른 등록 페이지로 분기하세요.
+        location.href = `inventory-register.html?type=${t}`;
+      };
+      renderHead();
+      renderBody();
+    }
+
+    function editItem(name){
+      alert(`'${name}' 수정은 추후 연결 예정입니다.`);
+    }
+
+    // CSV 내보내기
+    function toCSV(rows, tab){
+      const header = tab==='product'
+        ? ['제품명','장(mm)','폭(mm)','고(mm)','거래처','현재고','안전재고','단위','최종입고일']
+        : ['용지명','가로(mm)','세로(mm)','결','거래처','현재고','안전재고','단위','최종입고일'];
+      const body = rows.map(r => tab==='product'
+        ? [r.name,r.length,r.width,r.height,r.vendor,r.qty,r.safety,r.unit||'',r.lastIn||'']
+        : [r.name,r.width,r.height,r.grain||'',r.vendor,r.qty,r.safety,r.unit||'',r.lastIn||'']
+      );
+      return [header].concat(body).map(a=>a.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\r\n');
+    }
+    $('#btnExport').addEventListener('click', ()=>{
+      const tab = activeTab();
+      const rows = tab==='product' ? load(KEY_PRODUCTS,SAMPLE_PRODUCTS) : load(KEY_PAPERS,SAMPLE_PAPERS);
+      const blob = new Blob([toCSV(rows, tab)], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `inventory_${tab}_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click(); URL.revokeObjectURL(a.href);
+    });
+
+    // 이벤트
+    $('#btnSearch').addEventListener('click', render);
+    $('#q').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); render(); } });
+    $('#status').addEventListener('change', render);
+    $('#grain').addEventListener('change', render);
+    $$('#tabProduct, #tabPaper').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        $$('.tab').forEach(t=>t.classList.remove('active'));
+        b.classList.add('active');
+        render();
+      });
+    });
+
+    // 초기 렌더
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>배차 관리</title>
+  <link rel="stylesheet" href="assets/nav.css">
+  <style>
+    :root{ --bd:#e5e7eb; --fg:#111; --mut:#6b7280; --bg:#f5f6f8; --card:#fff; --primary:#2563eb; }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+    .container{max-width:1200px;margin:24px auto;padding:0 16px}
+    h2{margin:0 0 14px;font-size:22px;font-weight:800}
+
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:900px){ .grid{grid-template-columns:1fr} }
+
+    .f{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .f label{width:90px;min-width:90px;color:#374151;font-size:13px}
+    .inp,.sel,.btn,textarea{border:1px solid var(--bd);border-radius:8px;font-size:14px}
+    .inp{height:36px;padding:8px 10px;background:#fff}
+    .sel{height:36px;padding:0 10px;background:#fff;min-width:220px}
+    textarea{padding:10px;min-height:70px;width:100%}
+    .btn{height:36px;padding:0 14px;background:#fff;cursor:pointer}
+    .btn:hover{background:#f3f4f6}
+    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .mut{color:var(--mut);font-size:12px}
+
+    .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .table-wrap{border:1px solid var(--bd);border-radius:10px;overflow:auto}
+    table{width:100%;border-collapse:collapse;background:#fff}
+    thead{background:#f8f9fa}
+    th,td{padding:10px 12px;border-bottom:1px solid #f1f3f5;font-size:14px;white-space:nowrap}
+    tbody tr:hover{background:#fbfcfd}
+    .status{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .ok{background:#e8f0ff;color:#1e3a8a}
+    .cancel{background:#fee2e2;color:#991b1b}
+    .right{display:flex;justify-content:flex-end;gap:8px}
+  </style>
+</head>
+<body>
+  <header class="fixed-header"></header>
+
+  <main class="container">
+    <h2>배차 관리</h2>
+
+    <!-- 배차 등록 -->
+    <section class="card">
+      <h3 style="margin:0 0 12px">배차 등록</h3>
+      <div class="grid">
+        <div class="left">
+          <div class="f">
+            <label>제품 선택</label>
+            <select id="productSel" class="sel"></select>
+          </div>
+          <div class="f">
+            <label>현재 재고</label>
+            <div>
+              <strong id="stockNow">-</strong>
+              <span class="mut" id="unitNow"></span>
+              <span class="mut" id="specNow"></span>
+            </div>
+          </div>
+          <div class="f">
+            <label>출고 수량</label>
+            <input id="qtyOut" class="inp" type="number" min="1" placeholder="수량 입력" style="width:180px">
+            <span class="mut" id="unitOut"></span>
+          </div>
+          <div class="f">
+            <label>배차일</label>
+            <input id="shipDate" class="inp" type="date" style="width:180px">
+          </div>
+        </div>
+        <div class="right">
+          <div class="f">
+            <label>거래처</label>
+            <input id="customer" class="inp" placeholder="출고처/거래처" style="width:260px">
+          </div>
+          <div class="f">
+            <label>배송지</label>
+            <input id="dest" class="inp" placeholder="주소/현장명" style="width:320px">
+          </div>
+          <div class="f">
+            <label>차량/기사</label>
+            <input id="vehicle" class="inp" placeholder="차량/차종" style="width:150px">
+            <input id="driver" class="inp" placeholder="기사명" style="width:120px">
+          </div>
+          <div class="f" style="align-items:flex-start">
+            <label>메모</label>
+            <textarea id="memo" placeholder="전달 사항"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="right" style="margin-top:12px">
+        <button id="btnRegister" class="btn primary">배차 등록</button>
+        <button id="btnReset" class="btn">초기화</button>
+      </div>
+      <p class="mut" style="margin-top:8px">배차 등록 시 해당 제품 재고가 즉시 차감됩니다. (취소 시 재고 복원)</p>
+    </section>
+
+    <!-- 배차 내역 -->
+    <section class="card">
+      <div class="toolbar">
+        <input id="q" class="inp" style="flex:1;min-width:220px" placeholder="제품명/거래처/배송지 검색">
+        <input id="from" class="inp" type="date">
+        <span class="mut">~</span>
+        <input id="to" class="inp" type="date">
+        <select id="st" class="sel">
+          <option value="">상태(전체)</option>
+          <option value="OK">완료</option>
+          <option value="CANCEL">취소</option>
+        </select>
+        <button class="btn" id="btnSearch">검색</button>
+        <div style="flex:1"></div>
+        <button class="btn" id="btnExport">내보내기(CSV)</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>배차일</th>
+              <th>제품명</th>
+              <th>규격(장×폭×고)</th>
+              <th>거래처</th>
+              <th>배송지</th>
+              <th>수량</th>
+              <th>상태</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/nav.js"></script>
+  <script>
+    // 저장키
+    const KEY_PRODUCTS  = 'sepnp_inventory_products';
+    const KEY_DISPATCH  = 'sepnp_dispatches';
+
+    // 샘플(제품 재고가 비어있는 경우)
+    const SAMPLE_PRODUCTS = [
+      {id:'p1', name:'화장품 박스', length:200, width:120, height:60, vendor:'세팍패키지', qty:340, safety:100, unit:'개', lastIn:'2025-01-18'},
+      {id:'p2', name:'식품 박스',   length:180, width:100, height:80, vendor:'푸드팩',   qty:40,  safety:80,  unit:'개', lastIn:'2025-01-22'},
+      {id:'p3', name:'의류 택박스', length:90,  width:60,  height:40, vendor:'어패럴',   qty:12,  safety:50,  unit:'개', lastIn:'2024-12-30'}
+    ];
+
+    // 헬퍼
+    const $ = s=>document.querySelector(s);
+    const $$ = s=>Array.from(document.querySelectorAll(s));
+    const fmtNum = v => Number(v||0).toLocaleString();
+    const fmtBox = (l,w,h)=>`${fmtNum(l)}×${fmtNum(w)}×${fmtNum(h)}mm`;
+    const today = () => new Date().toISOString().slice(0,10);
+
+    function loadProducts(){
+      let list = JSON.parse(localStorage.getItem(KEY_PRODUCTS)||'null');
+      if(!Array.isArray(list) || !list.length){ list = SAMPLE_PRODUCTS; localStorage.setItem(KEY_PRODUCTS, JSON.stringify(list)); }
+      // id 보정
+      list.forEach(p=>{ if(!p.id) p.id = `${p.name}|${p.length}x${p.width}x${p.height}`; });
+      return list;
+    }
+    function saveProducts(list){ localStorage.setItem(KEY_PRODUCTS, JSON.stringify(list)); }
+    function loadDispatch(){ return JSON.parse(localStorage.getItem(KEY_DISPATCH)||'[]'); }
+    function saveDispatch(list){ localStorage.setItem(KEY_DISPATCH, JSON.stringify(list)); }
+
+    // 제품 선택 렌더
+    function renderProductSelect(){
+      const list = loadProducts();
+      $('#productSel').innerHTML = list.map(p => 
+        `<option value="${p.id}">${p.name} · ${fmtBox(p.length,p.width,p.height)} (${fmtNum(p.qty)}${p.unit||''})</option>`
+      ).join('');
+      onProductChange();
+    }
+
+    function onProductChange(){
+      const id = $('#productSel').value;
+      const p = loadProducts().find(x=>x.id===id);
+      if(!p){ $('#stockNow').textContent='-'; $('#specNow').textContent=''; $('#unitNow').textContent=''; $('#unitOut').textContent=''; return; }
+      $('#stockNow').textContent = fmtNum(p.qty);
+      $('#unitNow').textContent  = p.unit||'';
+      $('#specNow').textContent  = ` · ${fmtBox(p.length,p.width,p.height)}`;
+      $('#unitOut').textContent  = p.unit||'';
+      $('#qtyOut').max = p.qty;
+    }
+
+    // 등록
+    function registerDispatch(){
+      const id = $('#productSel').value;
+      const list = loadProducts();
+      const p = list.find(x=>x.id===id);
+      if(!p){ alert('제품을 선택하세요.'); return; }
+
+      const qty = parseInt($('#qtyOut').value||'0',10);
+      if(!qty || qty<=0){ alert('출고 수량을 입력하세요.'); return; }
+      if(qty > p.qty){ alert('재고보다 많은 수량을 출고할 수 없습니다.'); return; }
+
+      const rec = {
+        id: 'd'+Date.now(),
+        date: $('#shipDate').value || today(),
+        productId: p.id,
+        productName: p.name,
+        spec: fmtBox(p.length,p.width,p.height),
+        qty, unit: p.unit||'',
+        customer: $('#customer').value.trim(),
+        dest: $('#dest').value.trim(),
+        vehicle: $('#vehicle').value.trim(),
+        driver: $('#driver').value.trim(),
+        memo: $('#memo').value.trim(),
+        status: 'OK', // OK | CANCEL
+        createdAt: new Date().toISOString()
+      };
+
+      // 차감
+      p.qty = (p.qty||0) - qty;
+      saveProducts(list);
+
+      // 저장
+      const ds = loadDispatch();
+      ds.unshift(rec);
+      saveDispatch(ds);
+
+      alert('배차가 등록되었습니다.');
+      onProductChange();
+      renderTable();
+      resetForm(false);
+    }
+
+    function cancelDispatch(id){
+      const ds = loadDispatch();
+      const rec = ds.find(r=>r.id===id);
+      if(!rec){ alert('기록을 찾을 수 없습니다.'); return; }
+      if(rec.status==='CANCEL'){ alert('이미 취소된 배차입니다.'); return; }
+      if(!confirm('배차를 취소하고 재고를 복원할까요?')) return;
+
+      // 재고 복원
+      const list = loadProducts();
+      const p = list.find(x=>x.id===rec.productId);
+      if(p){ p.qty = (p.qty||0) + (rec.qty||0); saveProducts(list); }
+
+      // 상태 변경
+      rec.status='CANCEL';
+      saveDispatch(ds);
+
+      renderTable();
+      onProductChange();
+    }
+
+    function removeDispatch(id){
+      const ds = loadDispatch();
+      const rec = ds.find(r=>r.id===id);
+      if(!rec){ alert('기록을 찾을 수 없습니다.'); return; }
+      if(rec.status==='OK'){
+        if(!confirm('완료 상태 기록을 삭제하면 재고 복원이 되지 않습니다. 계속할까요?')) return;
+      }
+      // 취소 상태는 이미 재고 복원됨
+      const next = ds.filter(r=>r.id!==id);
+      saveDispatch(next);
+      renderTable();
+    }
+
+    // 테이블
+    function renderTable(){
+      const q = $('#q').value.trim().toLowerCase();
+      const st = $('#st').value;
+      const from = $('#from').value;
+      const to = $('#to').value;
+
+      let rows = loadDispatch();
+      rows = rows.filter(r=>{
+        const text = `${r.productName} ${r.customer} ${r.dest} ${r.spec}`.toLowerCase();
+        const passQ = !q || text.includes(q);
+        const passS = !st || (st==='OK' ? r.status==='OK' : r.status==='CANCEL');
+        const passFrom = !from || r.date >= from;
+        const passTo   = !to   || r.date <= to;
+        return passQ && passS && passFrom && passTo;
+      });
+
+      $('#tbody').innerHTML = rows.map(r=>`
+        <tr>
+          <td>${r.date}</td>
+          <td>${r.productName}</td>
+          <td>${r.spec}</td>
+          <td>${r.customer||''}</td>
+          <td>${r.dest||''}</td>
+          <td>${fmtNum(r.qty)}${r.unit||''}</td>
+          <td><span class="status ${r.status==='OK'?'ok':'cancel'}">${r.status==='OK'?'완료':'취소'}</span></td>
+          <td>
+            ${r.status==='OK'
+              ? `<button class="btn" style="height:28px;padding:0 10px;font-size:12px" onclick="cancelDispatch('${r.id}')">취소</button>`
+              : `<button class="btn" style="height:28px;padding:0 10px;font-size:12px" disabled>취소됨</button>`
+            }
+            <button class="btn" style="height:28px;padding:0 10px;font-size:12px" onclick="removeDispatch('${r.id}')">삭제</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // CSV
+    function exportCSV(){
+      const rows = loadDispatch();
+      const header = ['배차일','제품명','규격','거래처','배송지','수량','단위','상태','비고'];
+      const body = rows.map(r=>[r.date,r.productName,r.spec,r.customer||'',r.dest||'',r.qty,r.unit||'',r.status==='OK'?'완료':'취소',r.memo||'']);
+      const csv = [header].concat(body).map(a=>a.map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(',')).join('\r\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `dispatch_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click(); URL.revokeObjectURL(a.href);
+    }
+
+    // 폼 초기화
+    function resetForm(hard=true){
+      if(hard){
+        $('#productSel').selectedIndex = 0;
+      }
+      $('#qtyOut').value='';
+      $('#customer').value='';
+      $('#dest').value='';
+      $('#vehicle').value='';
+      $('#driver').value='';
+      $('#memo').value='';
+      $('#shipDate').value = today();
+    }
+
+    // 이벤트 바인딩
+    document.addEventListener('DOMContentLoaded', ()=>{
+      // 네비 로고 클릭 employee 이동은 nav.js에서 처리
+      renderProductSelect();
+      $('#shipDate').value = today();
+      renderTable();
+
+      $('#productSel').addEventListener('change', onProductChange);
+      $('#btnRegister').addEventListener('click', registerDispatch);
+      $('#btnReset').addEventListener('click', ()=>resetForm(false));
+
+      $('#btnExport').addEventListener('click', exportCSV);
+      $('#btnSearch').addEventListener('click', renderTable);
+      $('#q,#from,#to,#st').forEach?.(()=>{});
+      ['q','from','to','st'].forEach(id=>{
+        const el = document.getElementById(id);
+        el && el.addEventListener('change', renderTable);
+        if(id==='q') el && el.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); renderTable(); } });
+      });
+    });
+
+    // 외부(공정관리)에서 생산완료 입고 처리에 사용할 수 있는 공개 함수
+    // window.receiveProduction({id,name,length,width,height,qty,unit})
+    window.receiveProduction = function(payload){
+      const {id,name,length,width,height,qty,unit} = payload||{};
+      if(!name || !qty) return;
+      const list = loadProducts();
+      // 제품 찾기(우선 id, 없으면 이름+규격 매칭)
+      let p = list.find(x=> x.id===id) || list.find(x=> x.name===name && x.length==length && x.width==width && x.height==height);
+      if(!p){
+        p = { id: id || `${name}|${length}x${width}x${height}`, name, length, width, height, vendor:'', qty:0, safety:0, unit: unit||'개', lastIn: new Date().toISOString().slice(0,10) };
+        list.push(p);
+      }
+      p.qty = (p.qty||0) + Number(qty||0);
+      p.unit = p.unit || unit || '개';
+      p.lastIn = new Date().toISOString().slice(0,10);
+      saveProducts(list);
+    };
+  </script>
+</body>
+</html>

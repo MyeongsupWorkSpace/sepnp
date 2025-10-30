@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SEPNP - 홈</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        /* 기본 레이아웃 */
+        body.landing-page {
+            margin: 0;
+            min-height: 100vh;
+            background: #f7f3f4;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* 히어로 섹션 */
+        .hero-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .hero {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+
+        .hero-img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .hero-text {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .hero-text h1 {
+            margin: 0 0 16px;
+            font-size: 42px;
+            font-weight: 700;
+            color: #111;
+        }
+
+        .tagline {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 8px;
+        }
+
+        .short {
+            font-size: 16px;
+            color: #666;
+            margin: 0 0 24px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            padding: 12px 24px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #f8f9fa;
+        }
+
+        .btn.primary {
+            background: #0078d4;
+            border-color: #0078d4;
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background: #006abe;
+        }
+
+        /* 모달 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 1;
+            visibility: visible;
+            transition: all 0.2s;
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        /* 로그인 카드 */
+        .login-card {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+        }
+
+        .login-card h2 {
+            margin: 0 0 16px;
+            font-size: 24px;
+        }
+
+        .login-card .mini {
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .login-card label {
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .login-card input {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .error-message.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="landing-page">
+    <!-- 메인 랜딩 화면 -->
+    <main class="hero-container">
+        <div class="hero">
+            <img src="https://images.unsplash.com/photo-1507668077129-56e328b6b6b9?q=80&w=1200" 
+                 alt="회사 전경" class="hero-img">
+            <div class="hero-text">
+                <h1>SEPNP</h1>
+                <p class="tagline">품질과 신뢰로 만드는 패키징</p>
+                <p class="short">고객과 사원을 위한 맞춤형 포털로 이동하세요.</p>
+                <div class="buttons">
+                    <a class="btn" href="https://www.sepnp.com" target="_blank" rel="noopener">고객용</a>
+                    <button id="btnEmployee" class="btn primary">사원용</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 사원 로그인 모달 -->
+    <div id="empLoginOverlay" class="overlay hidden" aria-hidden="true">
+        <div class="login-card" role="dialog" aria-modal="true">
+            <h2>사원 로그인</h2>
+            <p class="mini">사원번호를 입력하세요.</p>
+            <form id="empLoginForm">
+                <label>사원번호 <input id="empLoginNo" inputmode="numeric" autocomplete="username" required></label>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary">입장</button>
+                    <button type="button" id="empLoginCancel" class="btn">취소</button>
+                </div>
+                <p id="empLoginError" class="error-message hidden"></p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 세션 체크: 이미 로그인되어 있다면 employee.html로 리다이렉트
+        if (sessionStorage.getItem('sepnp_emp_no')) {
+            window.location.href = 'employee.html';
+        }
+
+        const REGISTERED_EMPLOYEES = ['123','234','345','678']; // 실제 사번으로 교체
+        const btnEmployee = document.getElementById('btnEmployee');
+        const overlay = document.getElementById('empLoginOverlay');
+        const form = document.getElementById('empLoginForm');
+        const input = document.getElementById('empLoginNo');
+        const cancel = document.getElementById('empLoginCancel');
+        const err = document.getElementById('empLoginError');
+
+        btnEmployee.addEventListener('click', () => {
+            overlay.classList.remove('hidden');
+            input.value = '';
+            err.classList.add('hidden');
+            input.focus();
+        });
+
+        cancel.addEventListener('click', () => {
+            overlay.classList.add('hidden');
+        });
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            const val = input.value.trim();
+            
+            if (!/^\d{3,6}$/.test(val)) {
+                err.textContent = '사원번호는 숫자 3~6자리여야 합니다.';
+                err.classList.remove('hidden');
+                return;
+            }
+            
+            if (!REGISTERED_EMPLOYEES.includes(val)) {
+                err.textContent = '등록되지 않은 사원번호입니다.';
+                err.classList.remove('hidden');
+                return;
+            }
+
+            sessionStorage.setItem('sepnp_emp_no', val);
+            window.location.href = 'employee.html';
+        });
+
+        // 오버레이 바깥 클릭시 닫기
+        overlay.addEventListener('click', (ev) => {
+            if (ev.target === overlay) {
+                overlay.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

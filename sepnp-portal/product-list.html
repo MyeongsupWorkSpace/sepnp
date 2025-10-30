@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>제품 목록</title>
+  <link rel="stylesheet" href="assets/nav.css">
+  <style>
+    :root {
+      --gap: 16px;
+      --bd: #dee2e6;
+      --fg: #495057;
+      --fg2: #666;
+      --bg-card: #fff;
+      --bg-soft: #f8f9fa;
+      --primary: #0078d4;
+    }
+    body { 
+      margin:0; 
+      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans KR",sans-serif; 
+      color:#111; 
+      background:#f5f6f8; 
+      padding-top:60px !important; 
+    }
+    
+    /* 고정 헤더 */
+    .fixed-header { 
+      position: fixed !important; 
+      top: 0 !important; 
+      left: 0 !important; 
+      right: 0 !important; 
+      height: 60px !important; 
+      background: #fff !important; 
+      border-bottom: 1px solid var(--bd) !important; 
+      z-index: 9999 !important; 
+      display: flex !important; 
+      align-items: center !important; 
+      padding: 0 24px !important;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+    }
+    .fixed-header h1 { 
+      margin: 0 !important; 
+      font-size: 20px !important; 
+      font-weight: 600 !important; 
+      color: #111 !important;
+      flex: 1 !important;
+    }
+    .header-tabs {
+      display: flex !important;
+      gap: 8px !important;
+      align-items: center !important;
+    }
+    .header-tabs a {
+      padding: 8px 16px !important;
+      border-radius: 6px !important;
+      text-decoration: none !important;
+      color: var(--fg) !important;
+      font-size: 14px !important;
+      transition: all 0.2s !important;
+    }
+    .header-tabs a:hover {
+      background: var(--bg-soft) !important;
+      color: #111 !important;
+    }
+    .header-tabs a.active {
+      background: var(--primary) !important;
+      color: #fff !important;
+    }
+    .btn-logout {
+      padding: 8px 16px !important;
+      border: 1px solid var(--bd) !important;
+      border-radius: 6px !important;
+      background: #fff !important;
+      color: var(--fg) !important;
+      cursor: pointer !important;
+      font-size: 14px !important;
+      margin-left: 16px !important;
+    }
+    .btn-logout:hover {
+      background: var(--bg-soft) !important;
+    }
+    
+    .container { max-width: 1400px; margin: 24px auto; padding: 0 16px; }
+    h2 { margin:0 0 16px; }
+    .card { background:var(--bg-card); border:1px solid var(--bd); border-radius:12px; padding:24px; }
+    
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      align-items: center;
+    }
+    .search-bar input {
+      flex: 1;
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--bd);
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .search-bar select {
+      height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--bd);
+      border-radius: 6px;
+      font-size: 14px;
+      min-width: 140px;
+    }
+    
+    .btn { 
+      height:36px; 
+      padding:0 16px; 
+      border:1px solid var(--bd); 
+      border-radius:6px; 
+      background:#fff; 
+      color:#111; 
+      cursor:pointer; 
+      font-size:14px;
+      white-space: nowrap;
+    }
+    .btn.primary { background:var(--primary); border-color:var(--primary); color:#fff; }
+    .btn:hover { opacity: 0.9; }
+    
+    .product-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .product-table thead {
+      background: var(--bg-soft);
+    }
+    .product-table th {
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--fg);
+      border-bottom: 2px solid var(--bd);
+    }
+    .product-table td {
+      padding: 12px 8px;
+      font-size: 14px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .product-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+    .product-table tbody tr {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--fg2);
+    }
+    .empty-state svg {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge.process {
+      background: #e7f3ff;
+      color: #0078d4;
+    }
+    
+    /* 상세 모달 */
+    .modal { 
+      position:fixed; 
+      inset:0; 
+      background:rgba(0,0,0,.35); 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      opacity:0; 
+      visibility:hidden; 
+      transition:.15s; 
+      z-index:10000; 
+    }
+    .modal.show { opacity:1; visibility:visible; }
+    .modal-card { 
+      background:#fff; 
+      width:min(92vw,700px); 
+      max-height: 90vh;
+      overflow-y: auto;
+      border-radius:12px; 
+      box-shadow:0 10px 30px rgba(0,0,0,.2); 
+      padding:24px; 
+      position:relative; 
+    }
+    .modal-card h3 { margin:0 0 16px; font-size: 20px; }
+    .modal-close { 
+      position:absolute; 
+      top:16px; 
+      right:16px; 
+      border:none; 
+      background:transparent; 
+      font-size:24px; 
+      cursor:pointer; 
+      color:#777; 
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .modal-close:hover { background: #f0f0f0; color:#dc3545; }
+    
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .detail-item {
+      padding: 12px;
+      background: var(--bg-soft);
+      border-radius: 6px;
+    }
+    .detail-item label {
+      display: block;
+      font-size: 12px;
+      color: var(--fg2);
+      margin-bottom: 4px;
+    }
+    .detail-item .value {
+      font-size: 14px;
+      font-weight: 500;
+      color: #111;
+    }
+    
+    .process-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .process-list li {
+      padding: 4px 10px;
+      background: #e7f3ff;
+      border: 1px solid #b3d9ff;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--bd);
+    }
+    
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 150px;
+      padding: 16px;
+      background: var(--bg-soft);
+      border-radius: 8px;
+      border: 1px solid var(--bd);
+    }
+    .stat-card label {
+      display: block;
+      font-size: 12px;
+      color: var(--fg2);
+      margin-bottom: 4px;
+    }
+    .stat-card .value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- 고정 헤더 -->
+  <header class="fixed-header"></header>
+
+  <main class="container">
+    <div class="card">
+      <h2>제품 목록</h2>
+      
+      <!-- 통계 -->
+      <div class="stats">
+        <div class="stat-card">
+          <label>전체 제품</label>
+          <div class="value" id="statTotal">0</div>
+        </div>
+        <div class="stat-card">
+          <label>거래처 수</label>
+          <div class="value" id="statVendors">0</div>
+        </div>
+      </div>
+      
+      <!-- 검색 바 -->
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="제품명, 거래처 검색..." />
+        <select id="filterVendor">
+          <option value="">전체 거래처</option>
+        </select>
+        <button class="btn primary" id="btnRefresh">🔄 새로고침</button>
+      </div>
+      
+      <!-- 제품 테이블 -->
+      <div id="tableContainer"></div>
+    </div>
+  </main>
+
+  <!-- 상세 모달 -->
+  <div id="detailModal" class="modal">
+    <div class="modal-card">
+      <button type="button" id="btnDetailClose" class="modal-close">✕</button>
+      <h3 id="detailTitle">제품 상세</h3>
+      
+      <div class="detail-grid" id="detailContent"></div>
+      
+      <div id="processSection" style="margin-top: 16px;">
+        <h4 style="margin: 0 0 8px; font-size: 16px;">공정 정보</h4>
+        <ul class="process-list" id="processList"></ul>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn" id="btnEdit">수정</button>
+        <button class="btn" id="btnDelete" style="color: #dc3545; border-color: #dc3545;">삭제</button>
+      </div>
+    </div>
+  </div>
+
+<script src="assets/nav.js"></script>
+<script>
+// 로그인 확인
+const empNo = sessionStorage.getItem('sepnp_emp_no');
+if (!empNo) {
+  window.location.href = 'index.html';
+}
+
+// 로그아웃 버튼
+const btnLogout = document.getElementById('btnLogout');
+if(btnLogout) {
+  btnLogout.addEventListener('click', () => {
+    sessionStorage.removeItem('sepnp_emp_no');
+    window.location.href = 'index.html';
+  });
+}
+
+const PROD_KEY = 'sepnp_products_v1';
+const $ = (s) => document.querySelector(s);
+const NF = new Intl.NumberFormat('ko-KR');
+
+let products = [];
+let currentProduct = null;
+
+function loadProducts() {
+  const raw = localStorage.getItem(PROD_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveProducts(list) {
+  localStorage.setItem(PROD_KEY, JSON.stringify(list));
+}
+
+function renderStats() {
+  products = loadProducts();
+  $('#statTotal').textContent = products.length;
+  
+  const vendors = new Set(products.map(p => p.vendor).filter(Boolean));
+  $('#statVendors').textContent = vendors.size;
+}
+
+function renderVendorFilter() {
+  const vendors = [...new Set(products.map(p => p.vendor).filter(Boolean))].sort();
+  const select = $('#filterVendor');
+  const currentValue = select.value;
+  
+  select.innerHTML = '<option value="">전체 거래처</option>' + 
+    vendors.map(v => `<option value="${v}">${v}</option>`).join('');
+  
+  if(currentValue) select.value = currentValue;
+}
+
+function renderTable() {
+  const container = $('#tableContainer');
+  const searchTerm = $('#searchInput').value.toLowerCase();
+  const vendorFilter = $('#filterVendor').value;
+  
+  let filtered = products.filter(p => {
+    const matchSearch = !searchTerm || 
+      (p.name || '').toLowerCase().includes(searchTerm) ||
+      (p.vendor || '').toLowerCase().includes(searchTerm);
+    const matchVendor = !vendorFilter || p.vendor === vendorFilter;
+    return matchSearch && matchVendor;
+  });
+  
+  if(filtered.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div style="font-size: 48px;">📦</div>
+        <div style="font-size: 16px; margin-bottom: 8px;">등록된 제품이 없습니다</div>
+        <div style="font-size: 14px;">제품 등록 탭에서 새 제품을 등록해보세요</div>
+      </div>`;
+    return;
+  }
+  
+  container.innerHTML = `
+    <table class="product-table">
+      <thead>
+        <tr>
+          <th style="width: 50px;">#</th>
+          <th>거래처</th>
+          <th>제품명</th>
+          <th>용지</th>
+          <th>크기(장×폭×고)</th>
+          <th>단가</th>
+          <th>공정</th>
+          <th style="width: 120px;">등록일</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map((p, idx) => `
+          <tr data-id="${p.id || idx}">
+            <td>${idx + 1}</td>
+            <td><strong>${escapeHtml(p.vendor || '-')}</strong></td>
+            <td>${escapeHtml(p.name || '-')}</td>
+            <td>${escapeHtml(p.paper?.type || '-')}</td>
+            <td>${formatSize(p.size)}</td>
+            <td>${formatPrice(p.price)}</td>
+            <td>
+              <span class="badge process">${(p.processes || []).length}개</span>
+            </td>
+            <td style="color: #888; font-size: 12px;">
+              ${formatDate(p.createdAt)}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+  
+  // 행 클릭 이벤트
+  container.querySelectorAll('tbody tr').forEach((tr, idx) => {
+    tr.addEventListener('click', () => showDetail(filtered[idx]));
+  });
+}
+
+function formatSize(size) {
+  if(!size) return '-';
+  const l = size.l || '-';
+  const w = size.w || '-';
+  const h = size.h || '-';
+  return `${l}×${w}×${h}`;
+}
+
+function formatPrice(price) {
+  if(price == null) return '-';
+  return NF.format(price) + '원';
+}
+
+function formatDate(timestamp) {
+  if(!timestamp) return '-';
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function escapeHtml(s) {
+  if(s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":"&#39;"
+  })[c]);
+}
+
+function showDetail(product) {
+  currentProduct = product;
+  $('#detailTitle').textContent = product.name || '제품 상세';
+  
+  const content = $('#detailContent');
+  content.innerHTML = `
+    <div class="detail-item">
+      <label>거래처</label>
+      <div class="value">${escapeHtml(product.vendor || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>제품명</label>
+      <div class="value">${escapeHtml(product.name || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>크기 (장×폭×고)</label>
+      <div class="value">${formatSize(product.size)}</div>
+    </div>
+    <div class="detail-item">
+      <label>용지</label>
+      <div class="value">${escapeHtml(product.paper?.type || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>용지 크기</label>
+      <div class="value">${product.paper?.sizeW || '-'} × ${product.paper?.sizeH || '-'} mm</div>
+    </div>
+    <div class="detail-item">
+      <label>합지 원단</label>
+      <div class="value">${escapeHtml(product.laminate || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>원단 크기</label>
+      <div class="value">${product.laminationSize ? `${product.laminationSize.w || '-'} × ${product.laminationSize.h || '-'} mm` : '-'}</div>
+    </div>
+    <div class="detail-item">
+      <label>단가</label>
+      <div class="value">${formatPrice(product.price)}</div>
+    </div>
+    <div class="detail-item">
+      <label>절 수</label>
+      <div class="value">${product.cutCount || '-'}</div>
+    </div>
+    <div class="detail-item">
+      <label>칼규격</label>
+      <div class="value">${product.knifeSize ? `${product.knifeSize.w || '-'} × ${product.knifeSize.h || '-'} mm` : '-'}</div>
+    </div>
+    <div class="detail-item">
+      <label>배송지</label>
+      <div class="value">${escapeHtml(product.shipping || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>담당자</label>
+      <div class="value">${escapeHtml(product.manager || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>연락처</label>
+      <div class="value">${escapeHtml(product.managerPhone || '-')}</div>
+    </div>
+    <div class="detail-item">
+      <label>등록일</label>
+      <div class="value">${formatDate(product.createdAt)}</div>
+    </div>
+  `;
+  
+  const processList = $('#processList');
+  if(product.processes && product.processes.length > 0) {
+    processList.innerHTML = product.processes.map(p => `<li>${escapeHtml(p)}</li>`).join('');
+  } else {
+    processList.innerHTML = '<li style="background: #f0f0f0; border-color: #ddd;">등록된 공정이 없습니다</li>';
+  }
+  
+  $('#detailModal').classList.add('show');
+}
+
+function deleteProduct() {
+  if(!currentProduct) return;
+  if(!confirm(`"${currentProduct.name}" 제품을 삭제하시겠습니까?`)) return;
+  
+  products = products.filter(p => p.id !== currentProduct.id);
+  saveProducts(products);
+  
+  $('#detailModal').classList.remove('show');
+  renderStats();
+  renderVendorFilter();
+  renderTable();
+  
+  alert('제품이 삭제되었습니다.');
+}
+
+// 이벤트 리스너
+$('#searchInput').addEventListener('input', renderTable);
+$('#filterVendor').addEventListener('change', renderTable);
+$('#btnRefresh').addEventListener('click', () => {
+  renderStats();
+  renderVendorFilter();
+  renderTable();
+});
+
+$('#btnDetailClose').addEventListener('click', () => {
+  $('#detailModal').classList.remove('show');
+});
+
+$('#detailModal').addEventListener('click', (e) => {
+  if(e.target === $('#detailModal')) {
+    $('#detailModal').classList.remove('show');
+  }
+});
+
+$('#btnDelete').addEventListener('click', deleteProduct);
+
+$('#btnEdit').addEventListener('click', () => {
+  alert('수정 기능은 추후 구현 예정입니다.');
+});
+
+// 초기화
+renderStats();
+renderVendorFilter();
+renderTable();
+</script>
+</body>
+</html>
