@@ -3,704 +3,337 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>재고 현황</title>
+  <title>제품 등록</title>
   <link rel="stylesheet" href="assets/nav.css">
   <style>
-    :root {
-      --gap: 16px;
-      --bd: #dee2e6;
-      --fg: #495057;
-      --fg2: #666;
-      --bg-card: #fff;
-      --bg-soft: #f8f9fa;
-      --primary: #2563eb;
-    }
-    body { 
-      margin:0; 
-      font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans KR",sans-serif; 
-      color:#111; 
-      background:#f5f6f8; 
-    }
-    
-    .container { max-width: 1400px; margin: 24px auto; padding: 0 16px; }
-    h2 { margin:0 0 16px; font-size: 22px; font-weight: 700; }
-    
-    .card { 
-      background:var(--bg-card); 
-      border:1px solid var(--bd); 
-      border-radius:12px; 
-      padding:24px; 
-      margin-bottom: 20px;
-    }
-    
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    
-    .search-box {
-      display: flex;
-      gap: 8px;
-      flex: 1;
-      min-width: 240px;
-    }
-    
-    .search-box input {
-      flex: 1;
-      height: 36px;
-      padding: 8px 12px;
-      border: 1px solid var(--bd);
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    
-    .btn-group {
-      display: flex;
-      gap: 8px;
-    }
-    
-    .btn {
-      height: 36px;
-      padding: 0 16px;
-      border: 1px solid var(--bd);
-      border-radius: 8px;
-      background: #fff;
-      color: #111;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.15s ease;
-    }
-    
-    .btn:hover {
-      background: #f3f4f6;
-    }
-    
-    .btn.primary {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-    }
-    
-    .btn.primary:hover {
-      background: #1d4ed8;
-    }
-    
-    .table-wrapper {
-      overflow-x: auto;
-      border-radius: 8px;
-      border: 1px solid var(--bd);
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-    }
-    
-    thead {
-      background: #f8f9fa;
-      border-bottom: 2px solid var(--bd);
-    }
-    
-    th {
-      padding: 12px 16px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 13px;
-      color: #495057;
-      white-space: nowrap;
-    }
-    
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid #f1f3f5;
-      font-size: 14px;
-      color: #111;
-    }
-    
-    tbody tr:hover {
-      background: #f8f9fa;
-    }
-    
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-    
-    .badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    
-    .badge.status-normal { background: #d1fae5; color: #065f46; }
-    .badge.status-low { background: #fef3c7; color: #92400e; }
-    .badge.status-out { background: #fee2e2; color: #991b1b; }
-    
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: #6b7280;
-    }
-    
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 16px;
-      opacity: 0.3;
-    }
-    
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    
-    .stat-card {
-      background: var(--bg-soft);
-      border: 1px solid var(--bd);
-      border-radius: 8px;
-      padding: 16px;
-    }
-    
-    .stat-card .label {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 8px;
-    }
-    
-    .stat-card .value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #111;
-    }
-    
-    .stat-card .unit {
-      font-size: 14px;
-      color: #6b7280;
-      margin-left: 4px;
-    }
-    
-    @media (max-width: 768px) {
-      .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      
-      .search-box {
-        width: 100%;
-      }
-      
-      .btn-group {
-        width: 100%;
-        justify-content: flex-end;
-      }
-    }
+  /* 컴팩트 + 한 줄 유지 */
+  :root{ --ctl-h:28px; --ctl-r:6px; --ctl-fs:13px }
+  .inp,.sel,textarea{ height:var(--ctl-h); padding:6px 8px; font-size:var(--ctl-fs); border-radius:var(--ctl-r) }
+  .btn{ height:var(--ctl-h); padding:0 10px; font-size:var(--ctl-fs); border-radius:var(--ctl-r) }
+  .card{ padding:12px }
+  .title{ margin-bottom:8px }
+  .row{ margin:4px 0; gap:8px; grid-template-columns:78px 1fr } /* 라벨 더 좁게 */
+
+  /* 거래처: 버튼을 우측에 딱 붙게 */
+  .nowrap{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; white-space:nowrap }
+  #prodVendor{ flex:1; min-width:0 } /* 줄바꿈 방지 */
+  #btnVendorManage{ width:56px }      /* 고정폭 */
+
+  /* 치수 한 줄(더 컴팩트) */
+  .dim-group{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; white-space:nowrap }
+  .dim{ position:relative }
+  .dim .inp{ width:74px; padding-right:24px } /* 입력 폭 더 줄임 */
+  .dim .unit{ position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#6b7280; font-size:12px }
+  .sep{ margin:0 2px; color:#9aa1a9; font-weight:700 }
+
+  /* 선택 박스 최소폭 축소 */
+  #prodPaperType,#prodLaminateType{ min-width:120px }
+
+  /* 상단 3열 동일 높이 */
+  .grid.top3{ grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; gap:10px }
+  .grid.top3 > *{ height:100% }
+  /* 한 줄 치수 입력 너비 축소 */
+  .dim .inp{ width:90px; padding-right:28px }
+  .sep{ margin:0 2px }
+  /* 선택 박스 최소 너비 축소 */
+  #prodPaperType,#prodLaminateType{ min-width:130px }
+  :root{ --bd:#e5e7eb; --fg:#111; --mut:#6b7280; --bg:#f5f6f8; --card:#fff; --primary:#2563eb; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+  .container{max-width:1200px;margin:24px auto;padding:0 16px}
+  h2{margin:0 0 14px;font-size:22px;font-weight:800}
+  .topbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .btn{height:36px;padding:0 14px;border:1px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer}
+  .btn:hover{background:#f3f4f6}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  @media(max-width:1100px){ .grid{grid-template-columns:1fr} }
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
+  .title{font-weight:700;margin-bottom:10px}
+  .row{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;margin:8px 0}
+  .row-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .inp,.sel,textarea{height:36px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-size:14px}
+  .inp,textarea{padding:8px 10px}
+  .sel{padding:0 10px}
+  .mini{font-size:12px;color:var(--mut)}
+  ul.clean{list-style:none;padding:0;margin:0} ul.clean li{padding:8px 10px;border:1px solid #eef2f5;border-radius:8px;margin:6px 0;background:#fff}
+  /* 모달 */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+  .modal.show{display:flex}
+  .modal .panel{background:#fff;border:1px solid var(--bd);border-radius:12px;width:min(560px,100%);padding:16px}
+  .is-disabled{opacity:.6;pointer-events:none}
+  /* 추가 스타일 */
+  .dim-group{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap }
+  .dim-group > *{ flex:0 0 auto }
+  .dim .inp{ width:100px; padding-right:34px } /* 단위 자리 */
+  .sep{ margin:0 4px; color:#9aa1a9; font-weight:700 }
+  /* 균등 3칸 라인 */
+  .line3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:center }
+  .cell .mini{ display:block; margin-bottom:6px; color:#6b7280; font-size:12px }
+  .nowrap{ display:flex; align-items:center; gap:6px; white-space:nowrap; flex-wrap:nowrap }
+  .cell .sel{ min-width:160px }
+  .cell .btn{ width:32px; padding:0 }
+  /* 규격/크기 입력 한 줄 */
+  .dim-group{ display:flex; align-items:center; gap:6px; white-space:nowrap }
+  .dim{ position:relative }
+  .dim .inp{ width:74px; padding-right:24px }
+  .dim .unit{ position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#6b7280; font-size:12px }
+  .sep{ margin:0 2px; color:#9aa1a9; font-weight:700 }
+  @media(max-width:560px){ .dim .inp{ width:96px } }
+
+  /* 치수 입력 공통 너비 변수 */
+  :root{ --dimw: 74px; }
+  /* 기존 .dim .inp가 있다면 너비를 변수로 교체 */
+  .dim .inp{ width:var(--dimw); padding-right:24px } /* ← 기존 width 값을 var(--dimw)로 */
+  /* 규격 서브라벨 */
+  .dim-wrap{ display:inline-flex; flex-direction:column }
+  .dim-sub{ display:flex; gap:6px; margin-top:2px; color:#9aa1a9; font-size:11px; line-height:1 }
+  .dim-sub span{ display:inline-block; width:var(--dimw); text-align:center }
+
+  /* 규격 한 줄: [입력]mm × [입력]mm × [입력]mm */
+  .dim-group{ display:flex; align-items:center; gap:8px; white-space:nowrap }
+  .dim{ display:inline-flex; align-items:center; gap:6px }
+  .br{ color:#6b7280; font-weight:600 }   /* 대괄호 스타일 */
+  .sep{ color:#9aa1a9; font-weight:700 }
+  .inp{ height:28px }                      /* 기존 높이 대비 컴팩트 */
+  .dim .inp{ width:74px; padding:6px 8px } /* 장/폭/고 입력 폭 */
+
+  /* 라벨 위, 입력 아래(세로 쌓기) */
+  .row.stack{ grid-template-columns:1fr; align-items:flex-start }
+  .row.stack > label{ margin-bottom:4px }
+
+  /* 규격: 섹션 폭 안에서 자동 축소/줄바꿈 */
+  :root{
+    --dimw-min: 60px;   /* 너무 좁아지지 않게 최소 폭 */
+    --dimw-max: 74px;   /* 보통 상태 폭 */
+  }
+  .row.stack{ grid-template-columns: 1fr; align-items:flex-start } /* 라벨 위, 입력 아래 */
+  #prodForm .dim-group{
+    display:flex; align-items:center; gap:6px;
+    flex-wrap:wrap;           /* 넘치면 다음 줄로 */
+    max-width:100%;
+  }
+  .dim .inp{
+    width:clamp(var(--dimw-min), 8vw, var(--dimw-max)); /* 화면/섹션 폭에 따라 유연하게 */
+    padding:6px 8px;
+  }
+
+  /* 용지 정보 3칸: 섹션 폭 안에서 동일 높이/폭 */
+  .line3{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; align-items:start }
+  .line3 .cell{ min-width:0 }         /* 그리드 셀 내부 넘침 방지 */
+  .line3 .cell .sel{ width:100%; min-width:0 } /* 셀 안에서 꽉 차되 넘치지 않게 */
+  .line3 .cell .btn{ width:32px; padding:0 }
+  /* 없음 + 셀렉트 + + 버튼을 셀 폭 안에 정렬 */
+  .line3 .cell .nowrap{ display:grid; grid-template-columns:auto 1fr auto; gap:6px; align-items:center; white-space:normal }
+
+  /* 규격: 라벨 아래 한 줄, 절대 줄바꿈 금지 */
+  .dim-compact{ display:flex; align-items:center; gap:8px; white-space:nowrap; flex-wrap:nowrap }
+  .dim-compact .inp{ width:64px; height:26px; padding:4px 6px; font-size:12px } /* 더 작게 */
+  .dim-compact .unit{ font-size:12px; color:#6b7280 }
+  .dim-compact .sep{ margin:0 6px; color:#9aa1a9; font-weight:700 }
+
+  /* 용지/합지 셀렉트 너비 동일화 */
+  :root { --selectW: 180px; } /* 필요시 숫자만 조정 */
+  #prodPaperType,
+  #prodLaminateType {
+    width: var(--selectW);
+    min-width: var(--selectW);
+    max-width: var(--selectW);
+  }
+  /* + 버튼도 통일(옵션) */
+  #btnAddPaper,
+  #btnAddLaminate { width: 32px; padding: 0; }
   </style>
 </head>
 <body>
   <header class="fixed-header"></header>
 
   <main class="container">
-    <h2>재고 현황</h2>
-    
-    <!-- 통계 요약 -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="label">전체 품목</div>
-        <div class="value">124<span class="unit">개</span></div>
-      </div>
-      <div class="stat-card">
-        <div class="label">정상 재고</div>
-        <div class="value">98<span class="unit">개</span></div>
-      </div>
-      <div class="stat-card">
-        <div class="label">부족 품목</div>
-        <div class="value">18<span class="unit">개</span></div>
-      </div>
-      <div class="stat-card">
-        <div class="label">품절 품목</div>
-        <div class="value">8<span class="unit">개</span></div>
+    <div class="topbar">
+      <h2>제품 등록</h2>
+      <div class="row-inline">
+        <button type="button" id="clearProducts" class="btn">전체삭제</button>
+        <button form="prodForm" type="submit" class="btn primary">등록</button>
       </div>
     </div>
 
-    <div class="card">
-      <!-- 검색 및 필터 -->
-      <div class="toolbar">
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="품목명, 규격, 거래처 검색...">
-          <button class="btn" onclick="search()">검색</button>
+    <!-- 상단 3열 -->
+    <div class="grid top3">
+      <!-- 기본 정보 -->
+      <form id="prodForm" class="card" style="margin:0">
+        <div class="title">기본 정보</div>
+
+        <div class="row">
+          <label>거래처</label>
+          <div class="nowrap">
+            <input id="prodVendor" class="inp" placeholder="거래처 검색 또는 입력" readonly>
+            <button type="button" id="btnVendorManage" class="btn">선택</button>
+          </div>
         </div>
-        <div class="btn-group">
-          <select class="btn" id="filterStatus">
-            <option value="">전체 상태</option>
-            <option value="normal">정상</option>
-            <option value="low">부족</option>
-            <option value="out">품절</option>
-          </select>
-          <button class="btn primary" onclick="location.href='inventory-register.html'">+ 재고 등록</button>
+
+        <div class="row">
+          <label>제품명</label>
+          <input id="prodName" class="inp" placeholder="제품명">
         </div>
+
+        <div class="row stack">
+          <label>규격</label>
+          <div class="dim-compact">
+            <input id="prodLength" class="inp" type="number" placeholder="장"><span class="unit">mm</span>
+            <span class="sep">×</span>
+            <input id="prodWidth"  class="inp" type="number" placeholder="폭"><span class="unit">mm</span>
+            <span class="sep">×</span>
+            <input id="prodHeight" class="inp" type="number" placeholder="고"><span class="unit">mm</span>
+          </div>
+        </div>
+      </form>
+
+      <!-- 용지 정보 -->
+      <section class="card">
+        <div class="title">용지 정보</div>
+
+        <div class="row">
+          <label>용지</label>
+          <div class="row-inline" style="flex:1">
+            <select id="prodPaperType" class="sel" style="min-width:160px"><option value="">용지 선택</option></select>
+            <button type="button" id="btnAddPaper" class="btn">+</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>용지 크기</label>
+          <div class="dim-group">
+            <div class="dim"><input id="prodPaperWidth"  class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
+            <span class="sep">×</span>
+            <div class="dim"><input id="prodPaperHeight" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>합지</label>
+          <div class="row-inline">
+            <label class="row-inline"><input type="checkbox" id="lamNone" style="margin-right:6px">없음</label>
+          </div>
+        </div>
+
+        <div class="row" id="laminateRow">
+          <label>합지 원단</label>
+          <div class="row-inline" style="flex:1">
+            <select id="prodLaminateType" class="sel" style="min-width:140px"><option value="">합지 선택</option></select>
+            <button type="button" id="btnAddLaminate" class="btn">+</button>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>원단 크기</label>
+          <div class="dim-group">
+            <div class="dim"><input id="prodLamWidth"  class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
+            <span class="sep">×</span>
+            <div class="dim"><input id="prodLamHeight" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 추가정보 -->
+      <section class="card">
+        <div class="title">추가정보</div>
+
+        <div class="row">
+          <label>단가</label>
+          <div class="nowrap">
+            <input id="prodPrice" class="inp" placeholder="숫자" style="width:140px">
+            <span class="mini">원</span>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>절수</label>
+          <input id="prodCutCount" class="inp" type="number" placeholder="절수" style="width:120px">
+        </div>
+
+        <div class="row">
+          <label>칼규격</label>
+          <div class="dim-group">
+            <div class="dim"><input id="prodKnifeWidth"  class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
+            <span class="sep">×</span>
+            <div class="dim"><input id="prodKnifeHeight" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>배송지</label>
+          <!-- 한 줄 → 2줄로 변경 -->
+          <textarea id="prodShipping" class="inp" rows="2"
+            placeholder="배송지 입력(상세 주소 포함)"
+            style="height:calc(var(--ctl-h) * 2 + 8px)"></textarea>
+        </div>
+
+        <!-- 담당자: 휴대폰을 이름 아래로 분리 -->
+        <div class="row">
+          <label>담당자</label>
+          <input id="prodManager" class="inp" placeholder="이름" style="width:140px">
+        </div>
+        <div class="row">
+          <label>휴대폰</label>
+          <input id="prodManagerPhone" class="inp" placeholder="010-0000-0000" style="width:180px">
+        </div>
+      </section>
+    </div>
+
+    <!-- 하단 2열 -->
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+      <!-- 공정정보 -->
+      <section class="card" id="processSection">
+        <div class="title">공정정보</div>
+        <div class="row" style="grid-template-columns:96px 1fr">
+          <label>공정 선택</label>
+          <div class="row-inline" style="flex-wrap:wrap">
+            <label><input type="checkbox" name="process" value="인쇄"> 인쇄</label>
+            <label><input type="checkbox" name="process" value="코팅"> 코팅</label>
+            <label><input type="checkbox" name="process" value="금박"> 금박</label>
+            <label><input type="checkbox" name="process" value="형압"> 형압</label>
+            <label><input type="checkbox" name="process" value="합지"> 합지</label>
+            <label><input type="checkbox" name="process" value="톰슨"> 톰슨</label>
+            <label><input type="checkbox" name="process" value="접착"> 접착</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>상세</label>
+          <div id="processDetail" style="display:none"></div>
+        </div>
+      </section>
+
+      <!-- 공정 요약 -->
+      <section class="card">
+        <div class="title">공정 요약</div>
+        <ul id="processSummaryList" class="clean">
+          <li class="mini">등록된 공정이 없습니다.</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+  <!-- 거래처 선택 모달 -->
+  <div id="vendorModal" class="modal" aria-hidden="true">
+    <div class="panel">
+      <div class="row">
+        <label>검색</label>
+        <input id="vendorSearch" class="inp" placeholder="거래처 검색">
       </div>
-
-      <!-- 재고 테이블 -->
-      <div class="table-wrapper">
-$('#btnVendorManage').addEventListener('click', ()=>{
-  selectedVendor=null; $('#vendorSearch').value=prodVendor.value; renderVendorList(); $('#vendorModal').classList.add('show');
-});
-$('#btnVendorClose').addEventListener('click', ()=>$('#vendorModal').classList.remove('show'));
-$('#vendorModal').addEventListener('click', (e)=>{ if(e.target===$('#vendorModal')) $('#vendorModal').classList.remove('show'); });
-$('#vendorSearch').addEventListener('input', renderVendorList);
-
-// 완료 버튼 클릭 시 선택한 거래처 반영
-$('#btnVendorComplete').addEventListener('click', ()=>{
-  if(selectedVendor){
-    prodVendor.value = selectedVendor;
-  }
-  $('#vendorModal').classList.remove('show');
-});
-
-function renderVendorList(){
-  const term = $('#vendorSearch').value;
-  const list = vendorRankedList(term);
-  if(!list.length){ $('#vendorListArea').innerHTML='<div class="mini" style="padding:8px;">등록된 거래처가 없습니다.</div>'; return; }
-  $('#vendorListArea').innerHTML = list.map(v=>`
-    <div class="row-inline" style="justify-content:space-between; padding:4px 6px;">
-      <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${v}</span>
-      <button type="button" class="btn ${selectedVendor===v?'vendor-selected':''}" data-select="${v}">선택</button>
-    </div>`).join('');
-}
-$('#vendorListArea').addEventListener('click', (e)=>{
-  const v = e.target?.dataset?.select;
-  if(!v) return;
-  selectedVendor=v; $('#vendorSearch').value=v; renderVendorList();
-});
-$('#btnVendorAdd').addEventListener('click', ()=>{
-  const v = $('#vendorSearch').value.trim();
-  if(!v) return;
-  const list = loadVendors();
-  if(list.includes(v)){ alert('이미 등록됨'); return; }
-  list.push(v); saveVendors(list); selectedVendor=v; renderVendorList();
-});
-$('#btnVendorUpdate').addEventListener('click', ()=>{
-  if(!selectedVendor){ alert('수정할 거래처 선택'); return; }
-  const v = $('#vendorSearch').value.trim();
-  if(!v){ alert('거래처명 입력'); return; }
-  const list = loadVendors(); const idx = list.indexOf(selectedVendor);
-  if(idx>-1){ list[idx]=v; saveVendors(list); selectedVendor=v; renderVendorList(); }
-});
-$('#btnVendorDelete').addEventListener('click', ()=>{
-  if(!selectedVendor){ alert('삭제할 거래처 선택'); return; }
-  let list = loadVendors().filter(x=>x!==selectedVendor);
-  saveVendors(list); selectedVendor=null; $('#vendorSearch').value=''; renderVendorList();
-});
-
-// ========== 용지 ==========
-const PAPER_KEY = 'sepnp_papers_v1';
-const loadPapers = () => JSON.parse(localStorage.getItem(PAPER_KEY)||'[]');
-const savePapers = (arr) => localStorage.setItem(PAPER_KEY, JSON.stringify(arr));
-function renderPaperSelect(selVal){
-  const sel = $('#prodPaperType');
-  const list = loadPapers().sort((a,b)=>a.localeCompare(b,'ko'));
-  sel.innerHTML = '<option value="">용지 선택</option>' + list.map(v=>`<option value="${v}">${v}</option>`).join('');
-  if(selVal) sel.value = selVal;
-}
-$('#btnAddPaper').addEventListener('click', ()=>{
-  const name = (prompt('추가할 용지명')||'').trim();
-  if(!name) return;
-  const list = loadPapers();
-  if(!list.includes(name)){ list.push(name); savePapers(list); }
-  renderPaperSelect(name);
-});
-renderPaperSelect();
-
-// ========== 합지 ==========
-const LAMINATE_KEY = 'sepnp_laminates_v1';
-const loadLaminates = () => JSON.parse(localStorage.getItem(LAMINATE_KEY)||'[]');
-const saveLaminates = (arr) => localStorage.setItem(LAMINATE_KEY, JSON.stringify(arr));
-function renderLaminateSelect(selVal){
-  const sel = $('#prodLaminateType');
-  const list = loadLaminates().sort((a,b)=>a.localeCompare(b,'ko'));
-  sel.innerHTML = '<option value="">합지 선택</option>' + list.map(v=>`<option value="${v}">${v}</option>`).join('');
-  if(selVal) sel.value = selVal;
-}
-$('#btnAddLaminate').addEventListener('click', ()=>{
-  const name = (prompt('추가할 합지명')||'').trim();
-  if(!name) return;
-  const list = loadLaminates();
-  if(!list.includes(name)){ list.push(name); saveLaminates(list); }
-  renderLaminateSelect(name);
-});
-renderLaminateSelect();
-
-// ========== 합지원단 없음 ==========
-const lamNone=$('#lamNone'), lamSel=$('#prodLaminateType'), lamAddBtn=$('#btnAddLaminate'), lamW=$('#prodLamWidth'), lamH=$('#prodLamHeight'), lamRow=$('#laminateRow');
-function updateLaminateDisabled(){
-  const dis=lamNone.checked;
-  
-  // 합지 원단 드롭다운 비활성화
-  lamSel.disabled=dis; 
-  lamSel.classList.toggle('is-disabled',dis);
-  if(dis) lamSel.value='';
-  
-  // 합지 추가 버튼 비활성화
-  lamAddBtn.disabled=dis;
-  lamAddBtn.classList.toggle('is-disabled',dis);
-  
-  // 원단 크기 입력란 비활성화
-  [lamW,lamH].forEach(el=>{ 
-    el.disabled=dis; 
-    el.classList.toggle('is-disabled',dis); 
-    if(dis) el.value=''; 
-  });
-  lamRow.classList.toggle('is-disabled',dis);
-}
-lamNone.addEventListener('change', updateLaminateDisabled);
-updateLaminateDisabled();
-
-// ========== 단가 ==========
-const priceEl = $('#prodPrice');
-function cleanDecimal(raw){ let s=(raw||'').replace(/[^\d.]/g,''); const i=s.indexOf('.'); if(i!==-1) s=s.slice(0,i+1)+s.slice(i+1).replace(/\./g,''); if(s==='.') s='0.'; return s; }
-function formatWithCommaDecimal(raw){ const s=cleanDecimal(raw); const hasDot=s.includes('.'); const [iRaw,d='']=s.split('.'); const i=iRaw.replace(/^0+(?=\d)/,''); const f=i?NF.format(Number(i)):'0'; return hasDot?`${f}.${d}`:f; }
-priceEl.addEventListener('focus', ()=>{ priceEl.value=(priceEl.value||'').replace(/,/g,''); setTimeout(()=>priceEl.setSelectionRange(priceEl.value.length,priceEl.value.length),0); });
-priceEl.addEventListener('input', ()=>{ priceEl.value=formatWithCommaDecimal(priceEl.value); });
-priceEl.addEventListener('blur', ()=>{ priceEl.value=formatWithCommaDecimal(priceEl.value); });
-const getPriceValue = ()=>{ const raw=(priceEl.value||'').replace(/,/g,''); const n=parseFloat(raw); return Number.isNaN(n)?null:n; };
-
-// ========== 공정정보 ==========
-const processChecks = Array.from(document.querySelectorAll('#processSection input[name="process"]'));
-const processDetailEl = $('#processDetail');
-const processSummaryList = $('#processSummaryList');
-let processSummaries = [];
-
-function renderProcessSummary(){
-  if(processSummaries.length === 0) {
-    processSummaryList.innerHTML = '<li class="mini">등록된 공정이 없습니다.</li>';
-    return;
-  }
-  
-  // 공정을 카테고리별로 그룹화
-  const grouped = {};
-  processSummaries.forEach((s, idx) => {
-    // 카테고리 추출 로직 수정
-    let category = '';
-    if(s.startsWith('UV인쇄') || s.startsWith('옵셋인쇄')) category = '인쇄';
-    else if(s.startsWith('코팅')) category = '코팅';
-    else if(s.startsWith('금박')) category = '금박';
-    else if(s.startsWith('형압')) category = '형압';
-    else if(s.startsWith('합지')) category = '합지';
-    else if(s.startsWith('톰슨')) category = '톰슨';
-    else if(s.startsWith('접착')) category = '접착';
-    else category = s.split(' ')[0]; // fallback
-    
-    if(!grouped[category]) grouped[category] = [];
-    grouped[category].push({text: s, index: idx});
-  });
-  
-  // 카테고리 순서 정의
-  const categoryOrder = ['인쇄', '코팅', '금박', '형압', '합지', '톰슨', '접착'];
-  
-  let html = '';
-  categoryOrder.forEach(cat => {
-    if(grouped[cat]) {
-      html += `<li style="background:#e7f3ff; border-color:#0078d4; font-weight:600; padding:4px 10px;">${cat}</li>`;
-      grouped[cat].forEach(item => {
-        html += `<li data-index="${item.index}" style="cursor:pointer; margin-left:16px; background:#fff;" title="우클릭으로 삭제">${item.text}</li>`;
-      });
-    }
-  });
-  
-  processSummaryList.innerHTML = html;
-}
-renderProcessSummary();
-
-// 공정 요약 우클릭 삭제 이벤트
-processSummaryList.addEventListener('contextmenu', (e)=>{
-  e.preventDefault();
-  const li = e.target.closest('li[data-index]');
-  if(!li) return;
-  
-  const idx = parseInt(li.dataset.index, 10);
-  const processName = processSummaries[idx];
-  
-  if(confirm(`"${processName}" 공정을 삭제하시겠습니까?`)){
-    processSummaries.splice(idx, 1);
-    renderProcessSummary();
-  }
-});
-
-function attachRegisterHandler() {
-  const btnReg = $('#btnProcessRegister');
-  if(btnReg) btnReg.addEventListener('click', registerCurrentProcess);
-}
-
-function renderPrintDetail() {
-  processDetailEl.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>인쇄</strong></div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>도수:</span>
-      <select id="printColorCount" class="w-70">
-        <option value="0">0도</option>
-        <option value="1">1도</option>
-        <option value="2">2도</option>
-        <option value="3">3도</option>
-        <option value="4" selected>4도</option>
-        <option value="5">5도</option>
-        <option value="6">6도</option>
-      </select>
-      <span class="mini">별색:</span>
-      <select id="printSpotCount" class="w-70">
-        <option value="0" selected>0도</option>
-        <option value="1">1도</option>
-        <option value="2">2도</option>
-        <option value="3">3도</option>
-      </select>
+      <div id="vendorListArea" style="max-height:260px;overflow:auto;border:1px solid #eef1f4;border-radius:8px;padding:8px"></div>
+      <div class="row-inline" style="justify-content:flex-end;margin-top:10px;gap:8px">
+        <button type="button" id="btnVendorAdd" class="btn">추가</button>
+        <button type="button" id="btnVendorUpdate" class="btn">수정</button>
+        <button type="button" id="btnVendorDelete" class="btn">삭제</button>
+        <div style="flex:1"></div>
+        <button type="button" id="btnVendorComplete" class="btn primary">완료</button>
+        <button type="button" id="btnVendorClose" class="btn">닫기</button>
+      </div>
     </div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>면:</span>
-      <label><input type="checkbox" id="printSideFront"> 전면</label>
-      <label><input type="checkbox" id="printSideBack"> 후면</label>
-      <span class="mini">(둘 다 체크 = 양면)</span>
-    </div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>방식:</span>
-      <label><input type="radio" name="printMethod" value="옵셋" checked> 옵셋인쇄</label>
-      <label><input type="radio" name="printMethod" value="UV"> UV인쇄</label>
-    </div>
-    <div class="actions">
-      <button type="button" class="btn primary" id="btnProcessRegister">등록</button>
-    </div>
-  `;
-  attachRegisterHandler();
-}
+  </div>
 
-function renderCoatingDetail() {
-  processDetailEl.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>코팅</strong></div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>종류:</span><select id="coatingType" style="width:150px;">
-        <option value="무광CR">무광CR</option><option value="유광CR">유광CR</option><option value="무광라미">무광라미</option>
-        <option value="유광라미">유광라미</option><option value="부분UV">부분UV</option><option value="전면UV">전면UV</option>
-        <option value="오버코팅">오버코팅</option><option value="실크">실크</option><option value="기타">기타</option>
-      </select>
-    </div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>면:</span>
-      <label><input type="checkbox" id="coatingSideFront"> 전면</label>
-      <label><input type="checkbox" id="coatingSideBack"> 후면</label>
-      <span class="mini">(둘 다 체크 = 양면)</span>
-    </div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>메모:</span><input id="coatingNote" type="text" class="flex-1" placeholder="코팅 상세 (기타 시 필수)" />
-    </div>
-    <div class="actions"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>`;
-  attachRegisterHandler();
-}
-
-function renderFoilDetail() {
-  processDetailEl.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>금박</strong></div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>색상:</span><input id="foilColor" type="text" class="flex-1" placeholder="예: 금색, 은색, 로즈골드 등" />
-    </div>
-    <div class="actions"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>`;
-  attachRegisterHandler();
-}
-
-function renderEmbossDetail() {
-  processDetailEl.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>형압</strong></div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>종류:</span><select id="embossType" style="width:150px;">
-        <option value="볼록(엠보)">볼록(엠보)</option><option value="오목(디보)">오목(디보)</option>
-      </select>
-    </div>
-    <div class="actions"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>`;
-  attachRegisterHandler();
-}
-
-function renderLaminateDetail() {
-  processDetailEl.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>합지</strong></div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>종류:</span><select id="laminateType">
-        <option value="F골">F골</option><option value="E골">E골</option><option value="B골">B골</option>
-        <option value="AB골">AB골</option><option value="A골">A골</option>
-      </select>
-    </div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>면:</span>
-      <label><input type="radio" name="laminateSide" value="편면" checked> 편면</label>
-      <label><input type="radio" name="laminateSide" value="양면"> 양면</label>
-    </div>
-    <div class="actions"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>`;
-  attachRegisterHandler();
-}
-
-function renderGlueDetail() {
-  processDetailEl.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>접착</strong></div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>종류:</span><select id="glueType" style="width:150px;">
-        <option value="1면">1면</option><option value="2면">2면</option><option value="3면">3면</option>
-        <option value="4면">4면</option><option value="5면">5면</option><option value="6면">6면</option>
-        <option value="창문접착 +1면">창문접착 +1면</option><option value="창문접착 +2면">창문접착 +2면</option>
-        <option value="창문접착 +3면">창문접착 +3면</option><option value="창문접착 +4면">창문접착 +4면</option>
-        <option value="기타">기타</option>
-      </select>
-    </div>
-    <div class="row-inline" style="margin-bottom:8px;">
-      <span>메모:</span><input id="glueNote" type="text" class="flex-1" placeholder="접착 상세 (기타 시 필수)" />
-    </div>
-    <div class="actions"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>`;
-  attachRegisterHandler();
-}
-
-function updateProcessUI(selectedValue) {
-  switch(selectedValue) {
-    case '인쇄': renderPrintDetail(); processDetailEl.style.display='block'; break;
-    case '코팅': renderCoatingDetail(); processDetailEl.style.display='block'; break;
-    case '금박': renderFoilDetail(); processDetailEl.style.display='block'; break;
-    case '형압': renderEmbossDetail(); processDetailEl.style.display='block'; break;
-    case '합지': renderLaminateDetail(); processDetailEl.style.display='block'; break;
-    case '톰슨':
-      processDetailEl.style.display='none'; processDetailEl.innerHTML='';
-      processSummaries.push('톰슨 일반'); renderProcessSummary();
-      alert('공정이 등록되었습니다: 톰슨 일반');
-      const tomsonCheck = processChecks.find(cb=>cb.value==='톰슨');
-      if(tomsonCheck) tomsonCheck.checked=false;
-      break;
-    case '접착': renderGlueDetail(); processDetailEl.style.display='block'; break;
-    default: processDetailEl.style.display='none'; processDetailEl.innerHTML='';
-  }
-}
-
-function onProcessChange(e) {
-  const clicked = e.target;
-  if (!clicked) return;
-  if (clicked.checked) {
-    // 다른 체크박스 해제
-    processChecks.forEach(cb=>{ if(cb!==clicked) cb.checked=false; });
-    updateProcessUI(clicked.value);
-  } else {
-    // 체크 해제 시 상세 패널만 닫기 (등록하지 않음)
-    processDetailEl.style.display = 'none';
-    processDetailEl.innerHTML = '';
-  }
-}
-
-const processList = $('#processSection ul');
-if(processList){
-  processList.addEventListener('change', function(e){
-    if(e.target && e.target.name==='process') onProcessChange(e);
-  });
-}
-
-function registerCurrentProcess(){
-  const checked = processChecks.find(cb=>cb.checked);
-  if(!checked){ alert('공정을 선택하세요.'); return; }
-  let summary = '';
-  switch(checked.value) {
-    case '인쇄': {
-      const color = parseInt($('#printColorCount')?.value||'0',10);
-      const spot = parseInt($('#printSpotCount')?.value||'0',10);
-      const front = $('#printSideFront')?.checked||false;
-      const back = $('#printSideBack')?.checked||false;
-      let sides = front&&back?'양면':front?'전면':back?'후면':'';
-      if(!sides){ alert('전면/후면 중 최소 1개 선택하세요.'); return; }
-      const method = (document.querySelector('input[name="printMethod"]:checked')?.value)||'옵셋';
-      const methodLabel = method==='UV'?'UV인쇄':'옵셋인쇄';
-      const total = color+spot;
-      const spotPart = spot>0?`(별색${spot}도)`:'';
-      summary = `${methodLabel} ${total}도${spotPart} ${sides}`;
-      break;
-    }
-    case '코팅': {
-      let type = $('#coatingType')?.value||'';
-      const front = $('#coatingSideFront')?.checked||false;
-      const back = $('#coatingSideBack')?.checked||false;
-      let sides = front&&back?'양면':front?'전면':back?'후면':'';
-      if(!sides){ alert('전면/후면 중 최소 1개 선택하세요.'); return; }
-      const note = $('#coatingNote')?.value?.trim()||'';
-      if(type==='기타'){
-        if(!note){ alert('기타 선택 시 메모 입력하세요.'); return; }
-        type = note; summary = `코팅 ${type} ${sides}`;
-      } else summary = `코팅 ${type} ${sides}${note?` (${note})`:''}`;
-      break;
-    }
-    case '금박': {
-      const color = $('#foilColor')?.value?.trim()||'';
-      if(!color){ alert('금박 색상 입력하세요.'); return; }
-      summary = `금박 ${color}`;
-      break;
-    }
-    case '형압': {
-      const type = $('#embossType')?.value||'';
-      summary = `형압 ${type}`;
-      break;
-    }
-    case '합지': {
-      const type = $('#laminateType')?.value||'';
-      const side = (document.querySelector('input[name="laminateSide"]:checked')?.value)||'편면';
-      summary = `합지 ${type} ${side}`;
-      break;
-    }
-    case '접착': {
-      let type = $('#glueType')?.value||'';
-      const note = $('#glueNote')?.value?.trim()||'';
-      if(type==='기타'){
-        if(!note){ alert('기타 선택 시 메모 입력하세요.'); return; }
-        type = note; summary = `접착 ${type}`;
-      } else summary = `접착 ${type}${note?` (${note})`:''}`;
-      break;
-    }
-    default: summary = checked.value;
-  }
-  
-  // 공정 등록
-  processSummaries.push(summary);
-  renderProcessSummary();
-  alert(`공정이 등록되었습니다: ${summary}`);
-  
-  // 등록 후 체크박스 해제 및 상세 패널 닫기
-  checked.checked = false;
-  processDetailEl.style.display = 'none';
-  processDetailEl.innerHTML = '';
-}
-
-// ========== 폼 제출 ==========
-$('#prodForm').addEventListener('submit', (e)=>{
-  e.preventDefault();
-  const product = {
-    vendor: ($('#prodVendor').value||'').trim(),
-    name: ($('#prodName').value||'').trim(),
-    size: { l: +($('#prodLength').value||'')||null, w: +($('#prodWidth').value||'')||null, h: +($('#prodHeight').value||'')||null },
-    paper: { type: $('#prodPaperType').value||null, sizeW: +($('#prodPaperWidth').value||'')||null, sizeH: +($('#prodPaperHeight').value||'')||null },
-    laminate: $('#prodLaminateType').value||null,
-    laminationSize: lamNone.checked ? null : { w: +($('#prodLamWidth').value||'')||null, h: +($('#prodLamHeight').value||'')||null },
-    price: getPriceValue(),
-    cutCount: +($('#prodCutCount').value||'')||null,
-    knifeSize: { w: +($('#prodKnifeWidth').value||'')||null, h: +($('#prodKnifeHeight').value||'')||null },
-    shipping: ($('#prodShipping').value||'').trim(),
-    manager: ($('#prodManager').value||'').trim(),
-    managerPhone: ($('#prodManagerPhone').value||'').trim(),
-    processes: processSummaries.slice(),
-    createdAt: Date.now()
-  };
-  console.log('제품 등록:', product);
-  alert('제품 정보가 콘솔에 출력되었습니다.');
-});
-
-$('#clearProducts').addEventListener('click', ()=>{
-  if(confirm('모든 제품 데이터를 삭제하시겠습니까?')) alert('삭제 훅 호출됨');
-});
-</script>
+  <script src="assets/nav.js"></script>
+  <script defer src="assets/product-register.js"></script>
 </body>
 </html>
