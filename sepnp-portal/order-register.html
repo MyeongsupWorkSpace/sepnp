@@ -8,13 +8,6 @@
   <style>
     :root { --bd:#dee2e6; --fg:#495057; --fg2:#666; --soft:#f8f9fa; --card:#fff; --pri:#0078d4; }
     body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans KR",sans-serif;background:#f5f6f8;color:#111;padding-top:60px}
-    .fixed-header{position:fixed;inset:0 0 auto 0;height:60px;background:#fff;border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 24px;z-index:100}
-    .fixed-header h1{margin:0;font-size:20px;font-weight:600;flex:1}
-    .header-tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .header-tabs a{padding:6px 12px;border-radius:6px;text-decoration:none;color:var(--fg);font-size:13px}
-    .header-tabs a:hover{background:var(--soft)}
-    .header-tabs a.active{background:var(--pri);color:#fff}
-    .btn-logout{margin-left:8px;border:1px solid var(--bd);background:#fff;border-radius:6px;height:32px;padding:0 12px;cursor:pointer}
     .container{max-width:1200px;margin:24px auto;padding:0 16px}
     .grid{display:grid;grid-template-columns: 1.4fr 1fr; gap:16px}
     @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
@@ -142,104 +135,121 @@
   if(!empNo) location.href='index.html';
 
   // 로그아웃
-  document.getElementById('btnLogout').addEventListener('click',()=>{
+  document.getElementById('btnLogout')?.addEventListener('click',()=>{
     sessionStorage.removeItem('sepnp_emp_no'); location.href='index.html';
   });
 
   // 상수/도우미
   const PROD_KEY = 'sepnp_products_v1';
   const ORDER_KEY = 'sepnp_orders_v1';
-  const WS_KEY   = 'sepnp_workstatus_v1';
+  // 변경: v6 작업현황, v2 인쇄배정
+  const WS_KEY   = 'sepnp_workstatus_v6';
+  const ASSIGN_KEY = 'sepnp_assign_v2';
 
-  // 제품에서 공정 카테고리 추론
-  function inferCatsFromProduct(p){
-    // 기본값: 인쇄만
-    const found = new Set();
-    if(!p){ return ['print']; }
+  // 공정 우선순위(인쇄 → 코팅 → 금박 → 형압 → 합지 → 톰슨 → 접착)
+  const PROC_PRECEDENCE = [
+    { id:'print',      re:/인쇄|print/i },
+    { id:'coating',    re:/코팅|uv|라미/i },
+    { id:'foil',       re:/금박/i },
+    { id:'emboss',     re:/형압/i },
+    { id:'lamination', re:/합지|골|lam/i },
+    { id:'thomson',    re:/톰슨|타발|die/i },
+    { id:'adhesive',   re:/접착|글루|glue|bond/i }
+  ];
 
-    // 1) 배열 형태(processes/routes/operations 등)
-    const arrFields = ['processes','routes','operations','procs'];
-    arrFields.forEach(f=>{
-      const v = p[f];
-      if(Array.isArray(v)) v.forEach(x=> pushByName(String(x)));
-    });
-
-    // 2) 문자열 필드(route/process/operations/tags 등)
-    const strFields = ['route','process','operations','tags'];
-    strFields.forEach(f=>{
-      const v = p[f];
-      if(typeof v==='string') pushByName(v);
-    });
-
-    // 3) 불리언/플래그 유추
-    const flags = {
-      print: ['print','hasPrint','usePrint','인쇄'],
-      thom : ['thom','diecut','hasThom','useThom','톰슨','톰손'],
-      lam  : ['lam','laminate','lami','hasLam','useLam','합지','라미'],
-      glue : ['glue','adhesive','bond','hasGlue','useGlue','접착']
-    };
-    if(anyTrue(flags.print)) found.add('print');
-    if(anyTrue(flags.thom )) found.add('thom');
-    if(anyTrue(flags.lam  )) found.add('lam');
-    if(anyTrue(flags.glue )) found.add('glue');
-
-    // 없으면 인쇄 기본
-    if(found.size===0) found.add('print');
-    return [...found];
-
-    function anyTrue(keys){ return keys.some(k=> !!p[k]); }
-    function pushByName(text){
-      const t = text.toLowerCase();
-      if(/인쇄|print/.test(t)) found.add('print');
-      if(/톰슨|톰손|thom|die.?cut/.test(t)) found.add('thom');
-      if(/합지|lam(i|inate)?/.test(t)) found.add('lam');
-      if(/접착|glue|adhesive|bond/.test(t)) found.add('glue');
-    }
+  // 제품 공정 → 라우트(cat id 배열)로 변환
+  function mapProcessesToRoute(product){
+    const list = Array.isArray(product?.processes) ? product.processes.map(String) : [];
+    const route = PROC_PRECEDENCE.filter(p => list.some(x => p.re.test(x))).map(p=>p.id);
+    return route.length ? route : ['print'];
   }
 
-  // 작업현황의 "미배정 작업"에 카드 추가(공정 태깅 포함)
-  function addToUnassignedJobs(order){
-    let board;
-    try { board = JSON.parse(localStorage.getItem(WS_KEY) || '{}'); } catch { board = {}; }
-    if(!board || typeof board!=='object') board = {};
-    if(!Array.isArray(board.pool)) board.pool = [];
-    if(!Array.isArray(board.queue)) board.queue = [];
-    if(!board.lanes || typeof board.lanes !== 'object') board.lanes = {};
+  // 작업현황 v6 상태 로드/세이브
+  function wsLoad() {
+    let s;
+    try { s = JSON.parse(localStorage.getItem(WS_KEY) || ''); } catch {}
+    return s && typeof s==='object' ? s : null;
+  }
+  function wsSave(state){ localStorage.setItem(WS_KEY, JSON.stringify(state)); }
 
-    const exists = new Set([
-      ...board.pool.map(c=>c.id),
-      ...Object.values(board.lanes).flat().map(c=>c.id),
-      ...board.queue.map(c=>c.id)
-    ]);
-    if(exists.has(order.id)) return;
+  // 작업현황 v6 최소 구조 보장(풀 레인만 보장, 설비 레인은 화면에서 보장)
+  function wsEnsurePools(state){
+    if(!state || typeof state!=='object') state = {};
+    if(!state.lanes || typeof state.lanes!=='object') state.lanes = {};
+    if(!state.completed || typeof state.completed!=='object') state.completed = {};
+    PROC_PRECEDENCE.forEach(p=>{
+      const poolKey = `${p.id}::pool`;
+      if(!Array.isArray(state.lanes[poolKey])) state.lanes[poolKey] = [];
+      if(!Array.isArray(state.completed[p.id])) state.completed[p.id] = [];
+    });
+    if(typeof state.seq!=='number') state.seq = 0;
+    return state;
+  }
 
-    const cats = inferCatsFromProduct(order.productSnapshot);
+  // 작업현황 v6: 첫 공정 대기풀로 카드 투입(라우트 포함)
+  function addToWorkStatusByRoute(order){
+    const route = mapProcessesToRoute(order.productSnapshot);
+    let state = wsLoad();
+    state = wsEnsurePools(state || {});
+    const firstCat = route[0];
+    const poolKey = `${firstCat}::pool`;
 
+    // 중복 방지(모든 레인)
+    const exists = Object.values(state.lanes).flat().some(c => c.id === order.id);
+    if(exists){ wsSave(state); return; }
+
+    const qty = Number(order.sheetsQty||0) + Number(order.extraSheets||0);
     const card = {
       id: order.id,
-      title: (order.productName||'주문') + ' 작업',
-      productName: order.productName,
-      vendor: order.vendor,
-      qtySheets: order.sheetsQty ?? order.qty ?? null,
-      cutCount: order.cutCount ?? 1,
-      totalProducts: order.totalProducts ?? order.totalQty ?? ((order.sheetsQty ?? order.qty ?? 0) * (order.cutCount ?? 1)),
-      dueDate: order.dueDate,
+      title: `${order.productName||'제품'} 작업`,
+      vendor: order.vendor || '',
+      qty,
+      dueDate: order.dueDate || null,
       status: 'wait',
       createdAt: order.createdAt || Date.now(),
-      cats // 공정 태그
+      route,           // 전체 공정 라우트
+      currentCat: firstCat
     };
 
-    // 납기 정렬 및 20개 유지(초과는 queue)
-    board.pool.push(card);
-    board.pool.sort((a,b)=> Date.parse(a.dueDate||'')-Date.parse(b.dueDate||'') || (a.createdAt||0)-(b.createdAt||0));
-    while(board.pool.length>20){ board.queue.push(board.pool.pop()); }
-    // queue도 납기순
-    board.queue.sort((a,b)=> Date.parse(a.dueDate||'')-Date.parse(b.dueDate||'') || (a.createdAt||0)-(b.createdAt||0));
-
-    localStorage.setItem(WS_KEY, JSON.stringify(board));
+    state.lanes[poolKey].unshift(card);
+    wsSave(state);
   }
 
-  // 제품 로드
+  // 인쇄배정 v2: 인쇄 공정이 있을 때만 배정 풀에 등록
+  function addToAssignPoolIfPrint(order){
+    const route = mapProcessesToRoute(order.productSnapshot);
+    if(!route.includes('print')) return; // 인쇄 없으면 스킵
+
+    let state;
+    try { state = JSON.parse(localStorage.getItem(ASSIGN_KEY) || '{}'); } catch { state = {}; }
+    if(!Array.isArray(state.pool)) state.pool = [];
+    if(!state.lanes || typeof state.lanes!=='object') state.lanes = {};
+    if(!Array.isArray(state.completed)) state.completed = [];
+    if(!Array.isArray(state.history)) state.history = [];
+
+    const exists = [
+      ...state.pool,
+      ...Object.values(state.lanes).flat(),
+      ...state.completed
+    ].some(c => c.orderId === order.id);
+    if(exists){ localStorage.setItem(ASSIGN_KEY, JSON.stringify(state)); return; }
+
+    const qty = Number(order.sheetsQty||0) + Number(order.extraSheets||0);
+    state.pool.unshift({
+      id: `card_${order.id}`,
+      orderId: order.id,
+      productName: order.productName || '미상',
+      vendor: order.vendor || '',
+      quantity: qty,
+      dueDate: order.dueDate || '',
+      status: 'wait',
+      createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem(ASSIGN_KEY, JSON.stringify(state));
+  }
+
+  // 제품/주문 스토리지
   function loadProducts(){ try{ return JSON.parse(localStorage.getItem(PROD_KEY)||'[]'); }catch{ return []; } }
   function loadOrders(){ try{ return JSON.parse(localStorage.getItem(ORDER_KEY)||'[]'); }catch{ return []; } }
   function saveOrders(list){ localStorage.setItem(ORDER_KEY, JSON.stringify(list)); }
@@ -403,46 +413,6 @@
     wsSortQueue(board);
   }
 
-  // 작업현황의 "미배정 작업"에 카드 추가(용량 20 유지, 초과는 queue)
-  function addToUnassignedJobs(order){
-    let board;
-    try { board = JSON.parse(localStorage.getItem(WS_KEY) || '{}'); } catch { board = {}; }
-    board = wsEnsureShape(board);
-
-    // 중복 방지
-    const exists = new Set([
-      ...board.pool.map(c=>c.id),
-      ...Object.values(board.lanes).flat().map(c=>c.id),
-      ...board.queue.map(c=>c.id)
-    ]);
-    if(exists.has(order.id)) return;
-
-    const cats = inferCatsFromProduct(order.productSnapshot);
-
-    const card = {
-      id: order.id,
-      title: (order.productName||'주문') + ' 작업',
-      productName: order.productName,
-      vendor: order.vendor,
-      qtySheets: order.sheetsQty ?? order.qty ?? null,
-      cutCount: order.cutCount ?? 1,
-      totalProducts: order.totalProducts ?? order.totalQty ?? ((order.sheetsQty ?? order.qty ?? 0) * (order.cutCount ?? 1)),
-      dueDate: order.dueDate,
-      status: 'wait',
-      createdAt: order.createdAt || Date.now(),
-      cats // 공정 태그
-    };
-
-    // 납기 정렬 및 20개 유지(초과는 queue)
-    board.pool.push(card);
-    board.pool.sort((a,b)=> Date.parse(a.dueDate||'')-Date.parse(b.dueDate||'') || (a.createdAt||0)-(b.createdAt||0));
-    while(board.pool.length>20){ board.queue.push(board.pool.pop()); }
-    // queue도 납기순
-    board.queue.sort((a,b)=> Date.parse(a.dueDate||'')-Date.parse(b.dueDate||'') || (a.createdAt||0)-(b.createdAt||0));
-
-    localStorage.setItem(WS_KEY, JSON.stringify(board));
-  }
-
   // 저장
   function saveOrder(){
     if(!selected){ alert('제품을 먼저 검색하여 선택하세요.'); return; }
@@ -475,11 +445,70 @@
     all.push(order);
     saveOrders(all);
 
-    // 미배정 작업에 자동 투입(납기 오름차순, 최대 20 유지)
-    addToUnassignedJobs(order);
+    // 작업현황: 첫 공정 대기풀로
+    addToWorkStatusByRoute(order);
+    // 인쇄배정: 인쇄가 있을 때만 배정 풀로
+    addToAssignPoolIfPrint(order);
 
-    showToast('오더가 저장되었습니다. (미배정 작업에 추가됨)');
+    showToast('오더가 저장되었습니다. (작업현황/인쇄배정 반영)');
     renderHistory(selected.id);
+  }
+
+  // 작업현황 v6: 인쇄 카테고리 대기풀에 카드 추가
+  function addToWorkStatusPrintPool(order){
+    let state;
+    try { state = JSON.parse(localStorage.getItem(WS_KEY) || '{}'); } catch { state = {}; }
+    if(!state.lanes) state.lanes = {};
+    if(!state.completed) state.completed = {};
+    const poolKey = 'print::pool';
+    if(!Array.isArray(state.lanes[poolKey])) state.lanes[poolKey] = [];
+
+    // 중복 방지(모든 레인 검색)
+    const exists = Object.values(state.lanes).flat().some(c => c.id === order.id);
+    if(exists) { localStorage.setItem(WS_KEY, JSON.stringify(state)); return; }
+
+    const card = {
+      id: order.id,
+      title: `${order.productName||'제품'} 인쇄`,
+      vendor: order.vendor || '',
+      qty: Number(order.sheetsQty || 0) + Number(order.extraSheets || 0),
+      dueDate: order.dueDate || null,
+      status: 'wait',
+      createdAt: order.createdAt || Date.now()
+    };
+
+    state.lanes[poolKey].unshift(card);
+    localStorage.setItem(WS_KEY, JSON.stringify(state));
+  }
+
+  // 인쇄배정 v2: 배정 풀(state.pool)에 카드 추가
+  function addToAssignPool(order){
+    let state;
+    try { state = JSON.parse(localStorage.getItem(ASSIGN_KEY) || '{}'); } catch { state = {}; }
+    if(!Array.isArray(state.pool)) state.pool = [];
+    if(!state.lanes || typeof state.lanes !== 'object') state.lanes = {};
+    if(!Array.isArray(state.completed)) state.completed = [];
+
+    // 중복 방지(orderId 기준)
+    const exists = [
+      ...state.pool,
+      ...Object.values(state.lanes).flat(),
+      ...state.completed
+    ].some(c => c.orderId === order.id);
+    if(exists){ localStorage.setItem(ASSIGN_KEY, JSON.stringify(state)); return; }
+
+    state.pool.unshift({
+      id: `card_${order.id}`,          // 카드 자체 ID
+      orderId: order.id,               // 오더 ID로 중복 제어
+      productName: order.productName || '미상',
+      vendor: order.vendor || '',
+      quantity: Number(order.sheetsQty || 0) + Number(order.extraSheets || 0),
+      dueDate: order.dueDate || '',
+      status: 'wait',
+      createdAt: new Date().toISOString()
+    });
+
+    localStorage.setItem(ASSIGN_KEY, JSON.stringify(state));
   }
 
   // 이벤트 바인딩

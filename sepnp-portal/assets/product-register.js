@@ -4,6 +4,11 @@
   const $ = s=>document.querySelector(s);
   const $$ = s=>Array.from(document.querySelectorAll(s));
 
+  // 제품 목록 저장 키 추가
+  const PRODUCTS_KEY = 'sepnp_products_v1';
+  const loadProducts = () => JSON.parse(localStorage.getItem(PRODUCTS_KEY)||'[]');
+  const saveProducts = arr => localStorage.setItem(PRODUCTS_KEY, JSON.stringify(arr));
+
   // ========== 거래처 ==========
   const VENDOR_KEY='sepnp_vendors_v1';
   const loadVendors = ()=> JSON.parse(localStorage.getItem(VENDOR_KEY)||'[]');
@@ -386,24 +391,42 @@
   function bindForm(){
     $('#prodForm').addEventListener('submit',(e)=>{
       e.preventDefault();
+
+      // 필수값 체크
+      const vendor = ($('#prodVendor').value||'').trim();
+      const name   = ($('#prodName').value||'').trim();
+      if(!vendor){ alert('거래처를 선택하세요.'); return; }
+      if(!name){ alert('제품명을 입력하세요.'); return; }
+
       const product = {
-        vendor: ($('#prodVendor').value||'').trim(),
-        name: ($('#prodName').value||'').trim(),
+        id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+        vendor,
+        name,
         size: { l:+($('#prodLength').value||'')||null, w:+($('#prodWidth').value||'')||null, h:+($('#prodHeight').value||'')||null },
         paper:{ type:$('#prodPaperType').value||null, sizeW:+($('#prodPaperWidth').value||'')||null, sizeH:+($('#prodPaperHeight').value||'')||null },
-        laminate: $('#prodLaminateType').value||null,
-        laminationSize: $('#lamNone').checked ? null : { w:+($('#prodLamWidth').value||'')||null, h:+($('#prodLamHeight').value||'')||null },
-        price: getPriceValue(),
+        laminate: $('#lamNone')?.checked ? null : ($('#prodLaminateType').value||null),
+        laminationSize: $('#lamNone')?.checked ? null : { w:+($('#prodLamWidth')?.value||'')||null, h:+($('#prodLamHeight')?.value||'')||null },
+        price: (()=>{
+          const raw = ($('#prodPrice').value||'').replace(/,/g,'');
+          const n = parseFloat(raw); return Number.isNaN(n)?null:n;
+        })(),
         cutCount: +($('#prodCutCount').value||'')||null,
         knifeSize: { w:+($('#prodKnifeWidth').value||'')||null, h:+($('#prodKnifeHeight').value||'')||null },
         shipping: ($('#prodShipping').value||'').trim(),
         manager:  ($('#prodManager').value||'').trim(),
         managerPhone: ($('#prodManagerPhone').value||'').trim(),
-        processes: processSummaries.slice(),
+        processes: (typeof processSummaries!=='undefined'? processSummaries.slice(): []),
         createdAt: Date.now()
       };
-      console.log('제품 등록:', product);
-      alert('제품 정보가 콘솔에 출력되었습니다.');
+
+      // 저장
+      const list = loadProducts();
+      list.unshift(product);
+      saveProducts(list);
+
+      alert('저장되었습니다. 제품 목록에서 확인하세요.');
+      // 목록 페이지로 이동하려면 주석 해제 후 파일명에 맞게 수정
+      // location.href = 'product-list.html';
     });
 
     $('#clearProducts').addEventListener('click', ()=>{

@@ -3,871 +3,776 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>작엽 현황</title>
+  <title>작업 현황</title>
   <link rel="stylesheet" href="assets/nav.css">
   <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --bd:#e5e7eb; --mut:#6b7280; --fg:#111;
+      --primary:#2563eb; --laneW:280px; --radius:10px;
+      --wait:#fef3c7; --progress:#d1fae5; --done:#dbeafe;
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;background:#f9fafb;color:#111}
-    .container{max-width:1400px;margin:0 auto;padding:20px}
-    .head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
-    .btn{padding:8px 14px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s}
-    .btn:hover{background:#f3f4f6}
-    .btn.primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
-    .btn.primary:hover{background:#2563eb}
-    .btn.secondary{background:#6b7280;border-color:#6b7280;color:#fff}
-    .btn.secondary:hover{background:#4b5563}
-    .btn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
-    .btn.danger:hover{background:#b91c1c}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif;padding-top:60px}
     
-    .overview-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
-    .cat-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-    .cat-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px}
-    .cat-title{font-size:18px;font-weight:700;color:#111}
-    .kpis{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-    .kpi{font-size:13px;color:#6b7280}
-    .kpi strong{color:#111;font-size:16px;margin-left:4px}
-    .section-title{font-size:14px;font-weight:600;color:#374151;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
-    .machine-list{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
-    .mrow{display:flex;align-items:center;padding:6px 10px;background:#f9fafb;border-radius:6px;font-size:13px}
-    .mrow .name{font-weight:600;color:#374151;min-width:60px}
-    .mrow .value{color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .completed-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
-    .completed-item{padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;cursor:pointer;transition:all .2s}
-    .completed-item:hover{background:#dcfce7;border-color:#86efac}
-    .completed-item-header{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}
-    .completed-item-header .name{font-weight:600;color:#166534}
-    .completed-item-header .qty{color:#15803d;font-size:12px}
-    .completed-item-header .vendor{color:#65a30d;font-size:12px}
-    .completed-item-info{margin-top:4px;font-size:11px;color:#4d7c0f;display:flex;gap:8px;flex-wrap:wrap}
-
-    .board{display:flex;gap:16px;overflow-x:auto;padding-bottom:16px}
-    .lane{min-width:280px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;flex-shrink:0}
-    .lane-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-    .lane-title{font-size:15px;font-weight:700;color:#111}
-    .lane-count{font-size:12px;color:#6b7280}
-    .card-list{display:flex;flex-direction:column;gap:10px;min-height:60px}
-    .work-card{background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:12px;cursor:pointer;transition:all .2s}
-    .work-card:hover{box-shadow:0 4px 8px rgba(0,0,0,.08);transform:translateY(-2px)}
-    .work-card.wait{border-left:4px solid #6b7280}
-    .work-card.prog{border-left:4px solid #3b82f6;background:#eff6ff}
-    .work-card.error{border-left:4px solid #dc2626;background:#fef2f2}
-    .card-title{font-size:14px;font-weight:600;color:#111;margin-bottom:6px}
-    .card-meta{font-size:12px;color:#6b7280;display:flex;flex-direction:column;gap:3px}
-
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:2000}
-    .modal{background:#fff;border-radius:12px;padding:24px;width:min(92vw,500px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px rgba(0,0,0,.2)}
-    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-    .modal-header h3{margin:0;font-size:18px}
-    .modal-close{border:none;background:transparent;font-size:24px;cursor:pointer;color:#6b7280;padding:0;line-height:1}
-    .modal-close:hover{color:#dc2626}
-    .modal-body{margin-bottom:20px}
-    .modal-footer{display:flex;justify-content:flex-end;gap:8px}
-    .modal-info{display:flex;flex-direction:column;gap:10px}
-    .modal-info-row{display:flex;gap:12px}
-    .modal-info-row .label{min-width:80px;font-weight:600;color:#374151}
-    .quantity-info{background:#f9fafb;padding:12px;border-radius:8px;margin-bottom:16px}
-    .input-group{margin-bottom:16px}
-    .input-group label{display:block;font-weight:600;margin-bottom:6px;color:#374151}
-    .input-group input,.input-group select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:14px}
-    .hint{font-size:12px;color:#6b7280;margin-top:4px}
-
-    #poolSection{margin-bottom:24px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px}
-    #poolCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px}
+    header{position:sticky;top:60px;background:#fff;border-bottom:1px solid var(--bd);padding:10px 16px;z-index:5}
+    main{max-width:1600px;margin:14px auto;padding:0 16px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tab{padding:8px 14px;border:1px solid var(--bd);border-radius:999px;background:#fff;cursor:pointer;font-weight:600}
+    .tab.active{background:#e9f0ff;border-color:#9cc0ff;color:#0b58f2}
+    .actions{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+    .btn{height:34px;padding:0 12px;border:1px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer}
+    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .btn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
+    .board{display:none}
+    .board.active{display:block}
+    
+    /* 오늘 완료 섹션 */
+    .today-completed{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);margin-bottom:14px;padding:14px}
+    .today-completed h3{margin:0 0 10px;font-size:15px;font-weight:700}
+    .today-completed .list{display:flex;flex-wrap:wrap;gap:10px}
+    .today-completed .mini-card{padding:8px 12px;border:1px solid #d1fae5;border-radius:8px;background:#ecfdf5;cursor:pointer;font-size:13px}
+    .today-completed .mini-card:hover{background:#d1fae5}
+    
+    /* 대기풀 */
+    .pool-lane{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);margin-bottom:14px}
+    .pool-lane h3{margin:0;padding:10px 14px;border-bottom:1px solid var(--bd);font-size:15px;font-weight:700}
+    .pool-lane .count{color:var(--mut);font-weight:500;margin-left:6px}
+    .pool-lane .drop{padding:12px;display:flex;flex-wrap:wrap;gap:12px;min-height:140px}
+    .pool-lane .drop.dragover{outline:2px dashed #9bb7ff;outline-offset:-6px}
+    
+    /* 설비 레인 */
+    .machine-lanes{display:grid;grid-template-columns:repeat(auto-fill, minmax(var(--laneW),1fr));gap:12px}
+    .lane{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);display:flex;flex-direction:column;position:relative}
+    .lane.broken{opacity:0.5;pointer-events:none}
+    .lane.broken::after{content:'고장';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:900;color:#dc2626;opacity:0.3;pointer-events:none}
+    .lane h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--bd);font-size:14px;display:flex;align-items:center;justify-content:space-between}
+    .lane h3 .title-left{display:flex;align-items:center;gap:6px}
+    .lane h3 .broken-check{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:500;color:#dc2626;cursor:pointer}
+    .lane h3 .broken-check input{cursor:pointer;width:14px;height:14px}
+    .lane .count{color:var(--mut);font-weight:500;margin-left:6px}
+    .lane .drop{flex:1;padding:10px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+    .lane .drop.dragover{outline:2px dashed #9bb7ff;outline-offset:-6px}
+    
+    /* 카드 상태별 배경색 */
+    .wcard{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:10px;cursor:grab;box-shadow:0 1px 0 rgba(0,0,0,.03);width:240px;transition:background .2s}
+    .wcard.wait{background:var(--wait);border-color:#fde047}
+    .wcard.progress{background:var(--progress);border-color:#86efac}
+    .wcard.done{background:var(--done);border-color:#93c5fd}
+    .wcard:active{cursor:grabbing}
+    .wcard .title{font-weight:700;margin-bottom:6px}
+    .wcard .title-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+    .wcard .urgency{margin-left:auto;display:flex;gap:2px;font-size:16px;line-height:1}
+    .wcard .urgency .icon{filter: drop-shadow(0 0 1px rgba(0,0,0,.2))}
+    .wcard.urgent-blink{animation: urgentBlink .6s ease-in-out 5}
+    @keyframes urgentBlink{
+      0%,100% { background:#fff; border-color: var(--bd); }
+      50%     { background:#fecaca; border-color:#ef4444; }
+    }
+    .wcard .meta{display:flex;gap:6px;color:var(--mut);font-size:12px;margin-bottom:6px}
+    .wcard .status-sel{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+    .wcard .status-sel button{padding:4px 8px;border:1px solid var(--bd);border-radius:6px;background:#fff;cursor:pointer;font-size:11px}
+    .wcard .status-sel button.on{background:#3b82f6;border-color:#3b82f6;color:#fff;font-weight:600}
+    .empty{color:var(--mut);font-size:13px;text-align:center;padding:20px}
+    
+    /* 모달 */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+    .modal.show{display:flex}
+    .modal .panel{background:#fff;border:1px solid var(--bd);border-radius:12px;width:min(600px,90%);max-height:80vh;overflow:auto;padding:20px}
+    .modal h2{margin:0 0 14px}
+    .modal .close{float:right;padding:4px 10px;border:1px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer}
+    .modal .row{display:grid;grid-template-columns:120px 1fr;gap:10px;margin:10px 0;padding:10px 0;border-bottom:1px solid #f3f4f6;align-items:center}
+    .modal .row:last-child{border-bottom:none}
+    .modal .label{font-weight:600;color:var(--mut)}
+    .modal input[type="text"],.modal input[type="number"],.modal input[type="datetime-local"]{
+      width:100%;height:34px;padding:6px 10px;border:1px solid var(--bd);border-radius:6px;font-size:14px
+    }
+    .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+    .modal .info-text{color:var(--mut);font-size:13px;margin-top:8px;line-height:1.5}
   </style>
 </head>
 <body>
+  <!-- 고정 헤더 -->
   <header class="fixed-header"></header>
 
-  <main class="container">
-    <section id="overview">
-      <div class="head-row">
-        <h2 style="margin:0">작엽 현황</h2>
-        <div style="color:#666;font-size:12px">배정하기 버튼을 눌러 작업을 관리하세요</div>
-      </div>
-      <div class="overview-grid" id="overviewGrid"></div>
-    </section>
-
-    <section id="boardWrap" style="display:none">
-      <div class="head-row">
-        <h2 id="catTitle" style="margin:0">배정</h2>
-        <button class="btn secondary" id="btnBack">← 돌아가기</button>
-      </div>
-
-      <div id="poolSection">
-        <h3 style="margin:0 0 12px;font-size:16px">📋 미배정 작업</h3>
-        <div id="poolCards"></div>
-      </div>
-
-      <div class="board" id="boardArea"></div>
-    </section>
+  <main>
+    <div class="tabs" id="tabs"></div>
+    
+    <!-- 현재 공정의 오늘 완료된 작업 -->
+    <div class="today-completed" id="todayCompletedSection" style="display:none">
+      <h3><span id="todayProcessLabel"></span> 오늘 완료 <span class="count" id="todayCount">(0)</span></h3>
+      <div class="list" id="todayList"></div>
+    </div>
+    
+    <section id="boards"></section>
   </main>
+
+  <!-- 완료 카드 상세/수정 모달 -->
+  <div id="editModal" class="modal">
+    <div class="panel">
+      <button class="close" onclick="document.getElementById('editModal').classList.remove('show')">닫기</button>
+      <h2>작업 상세</h2>
+      <div id="editContent"></div>
+    </div>
+  </div>
+
+  <!-- 최종 수량 입력 모달 -->
+  <div id="finalQtyModal" class="modal">
+    <div class="panel">
+      <h2>생산 완료</h2>
+      <div class="row">
+        <div class="label">제품명</div>
+        <div id="finalProductName">-</div>
+      </div>
+      <div class="row">
+        <div class="label">주문 수량</div>
+        <div id="finalOrderQty">-</div>
+      </div>
+      <div class="row">
+        <div class="label">최종 생산 수량</div>
+        <input type="number" id="finalQtyInput" class="inp" min="0" placeholder="실제 생산된 수량 입력">
+      </div>
+      <p class="info-text">※ 입력한 수량이 재고로 등록됩니다.</p>
+      <div class="actions">
+        <button class="btn" onclick="closeFinalQtyModal()">취소</button>
+        <button class="btn primary" onclick="confirmFinalQty()">완료 및 재고 등록</button>
+      </div>
+    </div>
+  </div>
 
   <script src="assets/nav.js"></script>
   <script>
-    'use strict';
+  ;(()=>{
+    const $=s=>document.querySelector(s);
+    const $$=s=>Array.from(document.querySelectorAll(s));
 
-    // ========== 로그인 확인 ==========
-    const empNo = sessionStorage.getItem('sepnp_emp_no');
-    const empName = sessionStorage.getItem('sepnp_emp_name') || empNo || '미상';
-    
-    if(!empNo) {
-      location.href = 'index.html';
+    function getCurrentUser(){
+      try{
+        const authData = localStorage.getItem('sepnp_auth');
+        if(authData){
+          const parsed = JSON.parse(authData);
+          return parsed.user?.name || '관리자';
+        }
+      }catch(e){}
+      return '관리자';
     }
 
-    // ========== 공통 유틸 ==========
-    const NF = new Intl.NumberFormat('ko-KR');
-    const esc = (s) => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const today = () => new Date().toISOString().slice(0,10);
-    const now = () => new Date().toISOString();
-    
-    function formatDateTime(iso) {
-      if(!iso) return '';
-      const d = new Date(iso);
-      return d.toLocaleString('ko-KR', {
-        year:'numeric', month:'2-digit', day:'2-digit',
-        hour:'2-digit', minute:'2-digit'
-      });
-    }
+    const currentUserName = getCurrentUser();
 
-    function calcDuration(start, end) {
-      if(!start || !end) return '';
-      const ms = new Date(end) - new Date(start);
-      if(ms < 0) return '';
-      const min = Math.floor(ms / 60000);
-      if(min < 60) return `${min}분`;
-      const hr = Math.floor(min / 60);
-      const m = min % 60;
-      return m > 0 ? `${hr}시간 ${m}분` : `${hr}시간`;
-    }
-
-    // ========== 카테고리 & 설비 ==========
     const CATS = [
-      { id:'print', label:'인쇄' },
-      { id:'thomson', label:'톰슨' },
-      { id:'lamination', label:'합지' },
-      { id:'adhesive', label:'접착' }
+      { id:'print',      label:'인쇄',    machines:['1호기','2호기','3호기'] },
+      { id:'coating',    label:'코팅',    machines:['오버코팅1호기','오버코팅2호기','오버코팅3호기','UV코팅기','라미네이팅기','열코팅기'] },
+      { id:'foil',       label:'금박',    machines:['YUYIN1호기','YUYIN2호기','하이델베르그'] },
+      { id:'emboss',     label:'형압',    machines:['YUYIN1호기','YUYIN2호기','하이델베르그'] },
+      { id:'lamination', label:'합지',    machines:['합지기1','합지톰슨기1'] },
+      { id:'thomson',    label:'톰슨',    machines:['1호기','2호기','3호기','4호기','5호기'] },
+      { id:'adhesive',   label:'접착',    machines:['1호기','2호기','3호기','4호기','5호기','6호기','7호기'] }
     ];
 
-    const MACHINES = [
-      // 인쇄 1,2,3호기
-      { id:'print1', name:'1호기', cat:'print' },
-      { id:'print2', name:'2호기', cat:'print' },
-      { id:'print3', name:'3호기', cat:'print' },
-      
-      // 톰슨 1,2,3,4,5호기
-      { id:'thomson1', name:'1호기', cat:'thomson' },
-      { id:'thomson2', name:'2호기', cat:'thomson' },
-      { id:'thomson3', name:'3호기', cat:'thomson' },
-      { id:'thomson4', name:'4호기', cat:'thomson' },
-      { id:'thomson5', name:'5호기', cat:'thomson' },
-      
-      // 합지: 합지기1, 합지톰슨기1
-      { id:'lam1', name:'합지기1', cat:'lamination' },
-      { id:'lamthomson1', name:'합지톰슨기1', cat:'lamination' },
-      
-      // 접착 1,2,3,4,5,6,7호기
-      { id:'adhesive1', name:'1호기', cat:'adhesive' },
-      { id:'adhesive2', name:'2호기', cat:'adhesive' },
-      { id:'adhesive3', name:'3호기', cat:'adhesive' },
-      { id:'adhesive4', name:'4호기', cat:'adhesive' },
-      { id:'adhesive5', name:'5호기', cat:'adhesive' },
-      { id:'adhesive6', name:'6호기', cat:'adhesive' },
-      { id:'adhesive7', name:'7호기', cat:'adhesive' }
-    ];
+    const KEY='sepnp_workstatus_v6';
+    const state = load() || bootstrap();
+    let currentCat = CATS[0].id;
+    let pendingFinalCard = null; // 최종 수량 입력 대기 중인 카드
 
-    // ========== 상태 ==========
-    let state = {
-      pool: [],
-      lanes: {},
-      completed: [],
-      currentCat: null
+    function bootstrap(){
+      const lanes={};
+      const completed={};
+      const brokenMachines = {};
+      CATS.forEach(cat=>{
+        lanes[`${cat.id}::pool`]=[];
+        cat.machines.forEach((m,idx)=> lanes[`${cat.id}::m${idx+1}`]=[]);
+        completed[cat.id]=[];
+        brokenMachines[cat.id] = {};
+      });
+      return { lanes, completed, brokenMachines, seq:0 };
+    }
+    function load(){
+      try{
+        const raw=localStorage.getItem(KEY); if(!raw) return null;
+        const s=JSON.parse(raw);
+        if(!s.completed || Array.isArray(s.completed)){
+          const old = s.completed || [];
+          s.completed={};
+          CATS.forEach(cat=>s.completed[cat.id]=[]);
+          if(old.length) s.completed[CATS[0].id]=old;
+        }
+        if(!s.brokenMachines) s.brokenMachines = {};
+        CATS.forEach(cat=>{
+          if(!s.lanes[`${cat.id}::pool`]) s.lanes[`${cat.id}::pool`]=[];
+          cat.machines.forEach((m,idx)=>{
+            const k=`${cat.id}::m${idx+1}`; if(!s.lanes[k]) s.lanes[k]=[];
+          });
+          if(!s.completed[cat.id]) s.completed[cat.id]=[];
+          if(!s.brokenMachines[cat.id]) s.brokenMachines[cat.id] = {};
+        });
+        return s;
+      }catch(e){ console.error(e); return null; }
+    }
+    function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+
+    function isToday(ts){
+      if(!ts) return false;
+      const d = new Date(ts);
+      const today = new Date();
+      return d.toDateString() === today.toDateString();
+    }
+
+    function toDatetimeLocal(ts){
+      if(!ts) return '';
+      const d=new Date(ts);
+      const pad=n=>String(n).padStart(2,'0');
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    const PROC_ORDER = ['print','coating','foil','emboss','lamination','thomson','adhesive'];
+
+    function getNextCatId(card, currentCatId){
+      const route = Array.isArray(card?.route) ? card.route.slice() : PROC_ORDER.slice();
+      const idx = route.indexOf(currentCatId);
+      if(idx >= 0 && idx < route.length-1) return route[idx+1];
+      const i2 = PROC_ORDER.indexOf(currentCatId);
+      return (i2 >= 0 && i2 < PROC_ORDER.length-1) ? PROC_ORDER[i2+1] : null;
+    }
+
+    function isLastProcess(card, currentCatId){
+      return !getNextCatId(card, currentCatId);
+    }
+
+    // 재고 등록
+    function addToInventory(productName, qty, unit, spec){
+      const KEY_PRODUCTS = 'sepnp_inventory_products';
+      let products = [];
+      try{
+        products = JSON.parse(localStorage.getItem(KEY_PRODUCTS) || '[]');
+      }catch(e){}
+
+      // 동일 제품명 찾기
+      let product = products.find(p => p.name === productName);
+      if(!product){
+        // 신규 제품 추가
+        product = {
+          id: `prod_${Date.now()}`,
+          name: productName,
+          length: spec?.length || 0,
+          width: spec?.width || 0,
+          height: spec?.height || 0,
+          vendor: '',
+          qty: 0,
+          safety: 0,
+          unit: unit || '개',
+          lastIn: new Date().toISOString().slice(0,10)
+        };
+        products.push(product);
+      }
+
+      product.qty = (product.qty || 0) + qty;
+      product.unit = product.unit || unit || '개';
+      product.lastIn = new Date().toISOString().slice(0,10);
+
+      localStorage.setItem(KEY_PRODUCTS, JSON.stringify(products));
+    }
+
+    // 최종 수량 모달 열기
+    window.showFinalQtyModal = function(card, catId){
+      pendingFinalCard = { card, catId };
+      $('#finalProductName').textContent = card.title || '제품';
+      $('#finalOrderQty').textContent = `${card.qty || 0}개`;
+      $('#finalQtyInput').value = card.qty || 0;
+      $('#finalQtyModal').classList.add('show');
+      $('#finalQtyInput').focus();
     };
 
-    MACHINES.forEach(m => state.lanes[m.id] = []);
+    window.closeFinalQtyModal = function(){
+      $('#finalQtyModal').classList.remove('show');
+      pendingFinalCard = null;
+    };
 
-    function saveState() {
-      localStorage.setItem('sepnp_workstatus_v3', JSON.stringify(state));
-    }
-
-    function loadState() {
-      const saved = localStorage.getItem('sepnp_workstatus_v3');
-      if(saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          state.pool = Array.isArray(parsed.pool) ? parsed.pool : [];
-          state.lanes = parsed.lanes || {};
-          state.completed = Array.isArray(parsed.completed) ? parsed.completed : [];
-          MACHINES.forEach(m => {
-            if(!Array.isArray(state.lanes[m.id])) state.lanes[m.id] = [];
-          });
-        } catch(e) {
-          console.error('loadState error:', e);
-        }
-      }
-
-      // 오더 → 카드 동기화
-      const orders = JSON.parse(localStorage.getItem('sepnp_orders_v1') || '[]');
-      orders.forEach(o => {
-        if(!o.id) return;
-        const exists = [
-          ...state.pool,
-          ...Object.values(state.lanes).flat(),
-          ...state.completed
-        ].some(c => c.orderId === o.id);
-        
-        if(!exists) {
-          state.pool.push({
-            id: `card_${Date.now()}_${Math.random().toString(36).slice(2,9)}`,
-            orderId: o.id,
-            title: o.productName || '미상',
-            vendor: o.vendor || '',
-            totalProducts: o.quantity || 0,
-            dueDate: o.dueDate || '',
-            cats: ['print','thomson','lamination','adhesive'],
-            status: 'wait',
-            initialSheets: 0,
-            processFlow: [],
-            cutCount: 1,
-            createdAt: o.createdAt || now()
-          });
-        }
-      });
-
-      saveState();
-    }
-
-    // ========== 현재 공정 ==========
-    function getCurrentProcess(card) {
-      if(!Array.isArray(card.processFlow) || card.processFlow.length === 0) {
-        return Array.isArray(card.cats) && card.cats.length > 0 ? card.cats[0] : null;
-      }
-      const done = card.processFlow.map(p => p.process);
-      const remain = (card.cats || []).filter(c => !done.includes(c));
-      return remain[0] || null;
-    }
-
-    function getPoolForCat(catId) {
-      return state.pool.filter(c => getCurrentProcess(c) === catId);
-    }
-
-    function collectAllCards() {
-      return [
-        ...state.pool,
-        ...Object.values(state.lanes).flat(),
-        ...state.completed
-      ];
-    }
-
-    // 오늘 공정 완료(공정 단위 + 최종완료)
-    function getTodayCompleted(catId) {
-      const td = today();
-      const list = [];
-
-      // 공정 로그
-      collectAllCards().forEach(card => {
-        if(!Array.isArray(card.processFlow)) return;
-        card.processFlow.forEach((p, idx) => {
-          if(p.process === catId && p.completedAt && p.completedAt.startsWith(td)) {
-            list.push({
-              type: 'process',
-              process: catId,
-              cardId: card.id,
-              pidx: idx,
-              title: card.title || card.productName || '-',
-              vendor: card.vendor,
-              qty: p.outputQty,
-              completedAt: p.completedAt,
-              completedBy: p.completedBy
-            });
-          }
-        });
-      });
-
-      // 최종 완료
-      state.completed.forEach(c => {
-        const matchCat = !Array.isArray(c.cats) || c.cats.includes(catId);
-        const matchDate = c.completedAt && c.completedAt.startsWith(td);
-        if(matchCat && matchDate) {
-          const last = Array.isArray(c.processFlow) ? c.processFlow[c.processFlow.length - 1] : null;
-          list.push({
-            type: 'final',
-            cardId: c.id,
-            title: c.title || c.productName || '-',
-            vendor: c.vendor,
-            qty: last?.outputQty ?? c.totalProducts,
-            completedAt: c.completedAt,
-            completedBy: c.completedBy
-          });
-        }
-      });
-
-      list.sort((a,b) => (a.completedAt < b.completedAt ? 1 : -1));
-      return list;
-    }
-
-    // ========== 개요 렌더 ==========
-    function renderOverview() {
-      console.log('renderOverview');
+    window.confirmFinalQty = function(){
+      if(!pendingFinalCard) return;
       
-      const grid = document.getElementById('overviewGrid');
-      grid.innerHTML = '';
-      
-      CATS.forEach(cat => {
-        const machines = MACHINES.filter(m => m.cat === cat.id);
-        const allCards = machines.flatMap(m => state.lanes[m.id] || []);
-        const completed = getTodayCompleted(cat.id);
-        const poolCards = getPoolForCat(cat.id);
-        
-        const waitCnt = allCards.filter(c => (c.status || 'wait') === 'wait').length;
-        const progCnt = allCards.filter(c => c.status === 'prog').length;
-        const errCnt = allCards.filter(c => c.status === 'error').length;
-        
-        const machineRows = machines.map(m => {
-          const arr = state.lanes[m.id] || [];
-          const first = arr[0];
-          const title = first ? (first.title || first.productName || '-') : '-';
-          const extra = arr.length > 1 ? ` 외 ${arr.length - 1}건` : '';
-          return `<div class="mrow">
-            <div class="name">${m.name}</div>
-            <div class="value" title="${esc(title)}${extra}">${esc(title)}${extra}</div>
-          </div>`;
-        }).join('');
-        
-        const completedItems = completed.map(item => {
-          const headerParts = [];
-          headerParts.push(`<span class="name">${esc(item.title || '-')}</span>`);
-          if(item.qty != null) headerParts.push(`<span class="qty">(${NF.format(item.qty)})</span>`);
-          if(item.vendor) headerParts.push(`<span class="vendor">· ${esc(item.vendor)}</span>`);
-          
-          const infoParts = [];
-          if(item.completedBy) infoParts.push(`👤 ${esc(item.completedBy)}`);
-          if(item.completedAt) {
-            const time = new Date(item.completedAt).toLocaleTimeString('ko-KR', {hour: '2-digit', minute: '2-digit'});
-            infoParts.push(`🕐 ${time}`);
-          }
-          
-          return `<div class="completed-item" data-type="${item.type}" data-card-id="${item.cardId || ''}" ${item.pidx != null ? `data-pidx="${item.pidx}"` : ''}>
-            <div class="completed-item-header">${headerParts.join('')}</div>
-            ${infoParts.length > 0 ? `<div class="completed-item-info">${infoParts.join(' ')}</div>` : ''}
-          </div>`;
-        }).join('');
-        
-        const card = document.createElement('div');
-        card.className = 'cat-card';
-        card.innerHTML = `
-          <div class="cat-head">
-            <div class="cat-title">${cat.label}</div>
-            <button class="btn primary btn-assign" data-cat="${cat.id}">배정하기</button>
-          </div>
-          <div class="kpis">
-            <div class="kpi">총 <strong>${NF.format(allCards.length)}</strong></div>
-            <div class="kpi">대기 <strong>${NF.format(waitCnt)}</strong></div>
-            <div class="kpi">진행 <strong>${NF.format(progCnt)}</strong></div>
-            <div class="kpi">고장 <strong>${NF.format(errCnt)}</strong></div>
-          </div>
-          <div style="font-size:12px;color:#666">미배정: <strong>${poolCards.length}</strong>건</div>
-          
-          <div class="section-title">설비별 현황</div>
-          <div class="machine-list">${machineRows}</div>
-          
-          <div class="section-title">🎉 오늘 완료 (${completed.length}건)</div>
-          <div class="completed-list">
-            ${completedItems || '<div style="font-size:11px;color:#999;padding:4px">완료된 작업이 없습니다</div>'}
-          </div>
-        `;
-        
-        card.querySelector('.btn-assign').addEventListener('click', function() {
-          const catId = this.dataset.cat;
-          openBoard(catId);
-        });
-        
-        // 완료 항목 클릭
-        card.querySelectorAll('.completed-item').forEach(el => {
-          el.addEventListener('click', function() {
-            const type = this.dataset.type;
-            const cardId = this.dataset.cardId;
-            if(!cardId) return;
-
-            if(type === 'final') {
-              const completedCard = state.completed.find(c => c.id === cardId);
-              if(completedCard) showCompletedModal(completedCard);
-            } else if(type === 'process') {
-              const pidx = parseInt(this.dataset.pidx, 10);
-              const candidate = collectAllCards().find(c => c.id === cardId);
-              if(candidate && !isNaN(pidx) && candidate.processFlow?.[pidx]) {
-                showProcessModal(candidate, candidate.processFlow[pidx]);
-              }
-            }
-          });
-        });
-        
-        grid.appendChild(card);
-      });
-      
-      document.getElementById('overview').style.display = '';
-      document.getElementById('boardWrap').style.display = 'none';
-      state.currentCat = null;
-    }
-
-    // ========== 보드 렌더 ==========
-    function openBoard(catId) {
-      state.currentCat = catId;
-      renderBoard(catId);
-    }
-
-    function renderBoard(catId) {
-      const cat = CATS.find(c => c.id === catId);
-      if(!cat) return;
-
-      document.getElementById('catTitle').textContent = cat.label;
-      document.getElementById('overview').style.display = 'none';
-      document.getElementById('boardWrap').style.display = '';
-
-      renderPool(catId);
-      renderLanes(catId);
-    }
-
-    function renderPool(catId) {
-      const container = document.getElementById('poolCards');
-      const poolCards = getPoolForCat(catId);
-
-      if(poolCards.length === 0) {
-        container.innerHTML = '<div style="color:#999;font-size:13px;padding:12px;text-align:center">미배정 작업이 없습니다</div>';
+      const finalQty = parseInt($('#finalQtyInput').value || '0', 10);
+      if(!finalQty || finalQty < 0){
+        alert('최종 생산 수량을 입력하세요.');
         return;
       }
 
-      container.innerHTML = '';
-      poolCards.forEach(card => {
-        const div = document.createElement('div');
-        div.className = 'work-card wait';
-        div.innerHTML = `
-          <div class="card-title">${esc(card.title || card.productName || '-')}</div>
-          <div class="card-meta">
-            <div>거래처: ${esc(card.vendor || '-')}</div>
-            <div>수량: ${NF.format(card.totalProducts || 0)}개</div>
-            ${card.dueDate ? `<div>납기: ${card.dueDate}</div>` : ''}
-          </div>
-        `;
-        div.addEventListener('click', () => showAssignModal(card, catId));
-        container.appendChild(div);
-      });
-    }
-
-    function renderLanes(catId) {
-      const area = document.getElementById('boardArea');
-      const machines = MACHINES.filter(m => m.cat === catId);
-
-      area.innerHTML = '';
-      machines.forEach(m => {
-        const lane = document.createElement('div');
-        lane.className = 'lane';
-
-        const cards = state.lanes[m.id] || [];
-        const cardsHTML = cards.map(c => {
-          const cls = c.status === 'prog' ? 'prog' : c.status === 'error' ? 'error' : 'wait';
-          const statusText = c.status === 'prog' ? '🔵 진행중' : c.status === 'error' ? '🔴 고장' : '⚪ 대기';
-          return `<div class="work-card ${cls}" data-card-id="${c.id}">
-            <div class="card-title">${esc(c.title || c.productName || '-')}</div>
-            <div class="card-meta">
-              <div>${statusText}</div>
-              <div>거래처: ${esc(c.vendor || '-')}</div>
-              <div>수량: ${NF.format(c.totalProducts || 0)}개</div>
-            </div>
-          </div>`;
-        }).join('');
-
-        lane.innerHTML = `
-          <div class="lane-header">
-            <div class="lane-title">${m.name}</div>
-            <div class="lane-count">${cards.length}건</div>
-          </div>
-          <div class="card-list">${cardsHTML || '<div style="color:#999;font-size:12px;padding:20px;text-align:center">비어있음</div>'}</div>
-        `;
-
-        lane.querySelectorAll('.work-card').forEach(el => {
-          el.addEventListener('click', () => {
-            const cardId = el.dataset.cardId;
-            const card = cards.find(c => c.id === cardId);
-            if(card) showCardModal(card, catId, m.id);
-          });
-        });
-
-        area.appendChild(lane);
-      });
-    }
-
-    // ========== 모달: 배정 ==========
-    function showAssignModal(card, catId) {
-      const machines = MACHINES.filter(m => m.cat === catId);
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-
-      const opts = machines.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>배정하기</h3>
-          <button class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-info">
-            <div class="modal-info-row"><div class="label">작업명</div><div>${esc(card.title || card.productName || '-')}</div></div>
-            <div class="modal-info-row"><div class="label">거래처</div><div>${esc(card.vendor || '-')}</div></div>
-            <div class="modal-info-row"><div class="label">수량</div><div>${NF.format(card.totalProducts || 0)}개</div></div>
-          </div>
-          <div class="input-group">
-            <label>배정 설비</label>
-            <select id="machineSelect">${opts}</select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn" data-action="cancel">취소</button>
-          <button class="btn primary" data-action="assign">배정</button>
-        </div>
-      `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-
-      const close = () => document.body.removeChild(overlay);
-      overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
-      modal.querySelector('.modal-close').addEventListener('click', close);
-      modal.querySelector('[data-action="cancel"]').addEventListener('click', close);
-
-      modal.querySelector('[data-action="assign"]').addEventListener('click', () => {
-        const mid = modal.querySelector('#machineSelect').value;
-        const idx = state.pool.findIndex(c => c.id === card.id);
-        if(idx >= 0) {
-          state.pool.splice(idx, 1);
-          card.status = 'wait';
-          state.lanes[mid].push(card);
-          saveState();
-          renderBoard(catId);
-          close();
-        }
-      });
-    }
-
-    // ========== 모달: 카드 상세 ==========
-    function showCardModal(card, catId, machineId) {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-
-      const statusOpts = ['wait','prog','error'].map(s => {
-        const label = s === 'wait' ? '대기' : s === 'prog' ? '진행중' : '고장';
-        const sel = card.status === s ? 'selected' : '';
-        return `<option value="${s}" ${sel}>${label}</option>`;
-      }).join('');
-
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>작업 상세</h3>
-          <button class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-info">
-            <div class="modal-info-row"><div class="label">작업명</div><div>${esc(card.title || card.productName || '-')}</div></div>
-            <div class="modal-info-row"><div class="label">거래처</div><div>${esc(card.vendor || '-')}</div></div>
-            <div class="modal-info-row"><div class="label">수량</div><div>${NF.format(card.totalProducts || 0)}개</div></div>
-          </div>
-          <div class="input-group">
-            <label>상태</label>
-            <select id="statusSelect">${statusOpts}</select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn danger" data-action="unassign">배정 해제</button>
-          <button class="btn" data-action="cancel">취소</button>
-          <button class="btn primary" data-action="complete">완료</button>
-        </div>
-      `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-
-      const close = () => document.body.removeChild(overlay);
-      overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
-      modal.querySelector('.modal-close').addEventListener('click', close);
-      modal.querySelector('[data-action="cancel"]').addEventListener('click', close);
-
-      modal.querySelector('[data-action="unassign"]').addEventListener('click', () => {
-        if(confirm('배정을 해제하시겠습니까?')) {
-          const idx = state.lanes[machineId].findIndex(c => c.id === card.id);
-          if(idx >= 0) {
-            state.lanes[machineId].splice(idx, 1);
-            card.status = 'wait';
-            state.pool.push(card);
-            saveState();
-            renderBoard(catId);
-            close();
-          }
-        }
-      });
-
-      modal.querySelector('[data-action="complete"]').addEventListener('click', () => {
-        const newStatus = modal.querySelector('#statusSelect').value;
-        card.status = newStatus;
-
-        if(newStatus === 'prog' && !card.progressStartedAt) {
-          card.progressStartedAt = now();
-        }
-
-        saveState();
-
-        close();
-        showQuantityModal(card, catId, (completedQty) => {
-          markAsCompleted(card, catId, machineId, completedQty);
-        });
-      });
-    }
-
-    // ========== 수량 입력 모달 ==========
-    function showQuantityModal(card, currentCat, callback) {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
+      const { card, catId } = pendingFinalCard;
       
-      const modal = document.createElement('div');
-      modal.className = 'modal';
+      // 재고 등록
+      addToInventory(
+        card.title,
+        finalQty,
+        '개',
+        { length: 0, width: 0, height: 0 }
+      );
 
-      // 현재 공정의 입력 수량 결정: 직전 공정의 산출(없으면 초기 종이)
-      const prevProcess = Array.isArray(card.processFlow) && card.processFlow.length > 0
-        ? card.processFlow[card.processFlow.length - 1]
-        : null;
-      const prevQuantity = prevProcess ? (prevProcess.outputQty || 0) : (card.initialSheets || 0);
-      
-      let quantityLabel, quantityHint, quantityPlaceholder;
-      
-      if(currentCat === 'adhesive') {
-        quantityLabel = '완료된 제품 수량';
-        quantityHint = `절수: ${card.cutCount || 1}절 | 이전 공정 종이: ${NF.format(prevQuantity)}장`;
-        quantityPlaceholder = '완성된 제품 개수를 입력하세요';
-      } else {
-        quantityLabel = '완료된 종이 수량';
-        quantityHint = `투입 수량: ${NF.format(prevQuantity)}장 (여분 포함)`;
-        quantityPlaceholder = '완료된 종이 장수를 입력하세요';
-      }
-      
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>${CATS.find(c => c.id === currentCat)?.label || ''} 공정 완료</h3>
-          <button class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="quantity-info">
-            <div><strong>${esc(card.title || card.productName || '-')}</strong></div>
-            <div style="margin-top:6px">거래처: ${esc(card.vendor || '-')}</div>
-            <div>목표 수량: ${NF.format(card.totalProducts || 0)}개</div>
-          </div>
-          
-          <div class="input-group">
-            <label>${quantityLabel}</label>
-            <input type="number" id="completedQty" placeholder="${quantityPlaceholder}" min="0" step="1" autofocus>
-            <div class="hint">${quantityHint}</div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn" data-action="cancel">취소</button>
-          <button class="btn primary" data-action="confirm">완료 처리</button>
-        </div>
-      `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-
-      const close = () => document.body.removeChild(overlay);
-      overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
-      modal.querySelector('.modal-close').addEventListener('click', close);
-      modal.querySelector('[data-action="cancel"]').addEventListener('click', close);
-
-      modal.querySelector('[data-action="confirm"]').addEventListener('click', () => {
-        const val = parseFloat(modal.querySelector('#completedQty').value);
-        if(isNaN(val) || val <= 0) {
-          alert('유효한 수량을 입력하세요');
-          return;
-        }
-        close();
-        callback(val);
-      });
-    }
-
-    // ========== 공정 완료 처리 ==========
-    function markAsCompleted(card, catId, machineId, completedQty) {
-      const prevProcess = Array.isArray(card.processFlow) && card.processFlow.length > 0
-        ? card.processFlow[card.processFlow.length - 1]
-        : null;
-      const inputQty = prevProcess ? (prevProcess.outputQty || 0) : (card.initialSheets || 0);
-
-      const processLog = {
-        process: catId,
-        inputQty: inputQty,
-        outputQty: completedQty,
-        defectQty: Math.max(0, inputQty - completedQty),
-        completedAt: now(),
-        completedBy: empName
-      };
-
-      if(!Array.isArray(card.processFlow)) card.processFlow = [];
-      card.processFlow.push(processLog);
-
-      const nextProcess = getCurrentProcess(card);
-
-      if(!nextProcess) {
-        // 최종 완료
-        const idx = state.lanes[machineId].findIndex(c => c.id === card.id);
-        if(idx >= 0) {
-          state.lanes[machineId].splice(idx, 1);
-          card.status = 'done';
-          card.completedAt = now();
-          card.completedBy = empName;
-          state.completed.push(card);
-        }
-      } else {
-        // 다음 공정으로 이동
-        const idx = state.lanes[machineId].findIndex(c => c.id === card.id);
-        if(idx >= 0) {
-          state.lanes[machineId].splice(idx, 1);
-          card.status = 'wait';
-          delete card.progressStartedAt;
-          state.pool.push(card);
-        }
+      // 완료 처리
+      card.finalQty = finalQty;
+      card.completedAt = Date.now();
+      card.completedBy = currentUserName;
+      if(!card.startedAt){
+        card.startedAt = Date.now();
+        card.startedBy = currentUserName;
       }
 
-      saveState();
-      renderOverview();
-      if(state.currentCat) renderBoard(state.currentCat);
+      const loc = findCardLocation(card.id);
+      if(loc){
+        const [removed] = state.lanes[loc.key].splice(loc.index, 1);
+        if(!state.completed[catId]) state.completed[catId] = [];
+        state.completed[catId].unshift(removed);
+        
+        refreshLane(loc.key, catId);
+        renderTodayCompleted(catId);
+        save();
+      }
+
+      closeFinalQtyModal();
+      alert(`생산 완료! 재고에 ${finalQty}개가 등록되었습니다.`);
+    };
+
+    function renderTodayCompleted(catId){
+      currentCat = catId;
+      const todayCards = (state.completed[catId]||[]).filter(c=>isToday(c.completedAt));
+      const section = $('#todayCompletedSection');
+      const list = $('#todayList');
+      const count = $('#todayCount');
+      const label = $('#todayProcessLabel');
+      
+      const cat = CATS.find(c=>c.id===catId);
+      label.textContent = cat ? cat.label : '';
+      
+      if(!todayCards.length){
+        section.style.display='none';
+        return;
+      }
+      
+      section.style.display='block';
+      count.textContent=`(${todayCards.length})`;
+      list.innerHTML='';
+      
+      todayCards.forEach(card=>{
+        const mini = document.createElement('div');
+        mini.className='mini-card';
+        const finalText = card.finalQty ? ` → 생산 ${card.finalQty}개` : '';
+        mini.textContent=`${card.title} - ${card.vendor||''} (${card.qty??0})${finalText}`;
+        mini.addEventListener('click', ()=>showEditModal(card, catId));
+        list.appendChild(mini);
+      });
     }
 
-    // ========== 공정 로그 모달 ==========
-    function showProcessModal(card, p) {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-
-      const catLabel = CATS.find(c => c.id === p.process)?.label || p.process;
-
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>${catLabel} 공정 완료</h3>
-          <button class="modal-close">×</button>
+    function showEditModal(card, catId){
+      const modal = $('#editModal');
+      const content = $('#editContent');
+      
+      content.innerHTML=`
+        <div class="row">
+          <div class="label">제품명</div>
+          <input type="text" id="editTitle" value="${card.title||''}">
         </div>
-        <div class="modal-body">
-          <div class="modal-info">
-            <div class="modal-info-row"><div class="label">작업명</div><div>${esc(card.title || card.productName || '-')}</div></div>
-            ${card.vendor ? `<div class="modal-info-row"><div class="label">거래처</div><div>${esc(card.vendor)}</div></div>` : ''}
-            <div class="modal-info-row"><div class="label">투입</div><div>${NF.format(p.inputQty || 0)}</div></div>
-            <div class="modal-info-row"><div class="label">산출</div><div>${NF.format(p.outputQty || 0)}</div></div>
-            ${p.defectQty != null ? `<div class="modal-info-row"><div class="label">불량</div><div>${NF.format(p.defectQty)}</div></div>` : ''}
-            ${p.completedBy ? `<div class="modal-info-row"><div class="label">작업자</div><div>${esc(p.completedBy)}</div></div>` : ''}
-            ${p.completedAt ? `<div class="modal-info-row"><div class="label">완료</div><div>${formatDateTime(p.completedAt)}</div></div>` : ''}
-          </div>
+        <div class="row">
+          <div class="label">거래처</div>
+          <input type="text" id="editVendor" value="${card.vendor||''}">
         </div>
-        <div class="modal-footer">
-          <button class="btn" data-action="close">닫기</button>
-          <button class="btn danger" data-action="remove">이 공정 기록 삭제</button>
+        <div class="row">
+          <div class="label">수량</div>
+          <input type="number" id="editQty" value="${card.qty??0}">
+        </div>
+        ${card.finalQty ? `
+        <div class="row">
+          <div class="label">최종 생산량</div>
+          <div>${card.finalQty}개</div>
+        </div>
+        ` : ''}
+        <div class="row">
+          <div class="label">작업 시작</div>
+          <input type="datetime-local" id="editStart" value="${toDatetimeLocal(card.startedAt)}">
+        </div>
+        <div class="row">
+          <div class="label">시작 작업자</div>
+          <input type="text" id="editStartedBy" value="${card.startedBy||''}">
+        </div>
+        <div class="row">
+          <div class="label">작업 종료</div>
+          <input type="datetime-local" id="editEnd" value="${toDatetimeLocal(card.completedAt)}">
+        </div>
+        <div class="row">
+          <div class="label">종료 작업자</div>
+          <input type="text" id="editCompletedBy" value="${card.completedBy||''}">
+        </div>
+        <div class="actions">
+          <button class="btn danger" id="btnDelete">삭제</button>
+          <button class="btn primary" id="btnSave">저장</button>
         </div>
       `;
 
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
+      $('#btnSave').addEventListener('click', ()=>{
+        card.title = $('#editTitle').value.trim();
+        card.vendor = $('#editVendor').value.trim();
+        card.qty = +$('#editQty').value || 0;
+        const startVal = $('#editStart').value;
+        const endVal = $('#editEnd').value;
+        card.startedAt = startVal ? new Date(startVal).getTime() : card.startedAt;
+        card.completedAt = endVal ? new Date(endVal).getTime() : card.completedAt;
+        card.startedBy = $('#editStartedBy').value.trim();
+        card.completedBy = $('#editCompletedBy').value.trim();
+        save();
+        renderTodayCompleted(catId);
+        modal.classList.remove('show');
+        alert('저장되었습니다.');
+      });
 
-      const close = () => document.body.removeChild(overlay);
-      overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
-      modal.querySelector('.modal-close').addEventListener('click', close);
-      modal.querySelector('[data-action="close"]').addEventListener('click', close);
+      $('#btnDelete').addEventListener('click', ()=>{
+        if(!confirm('이 작업을 삭제할까요?')) return;
+        const idx = state.completed[catId].findIndex(c=>c.id===card.id);
+        if(idx>-1) state.completed[catId].splice(idx,1);
+        save();
+        renderTodayCompleted(catId);
+        modal.classList.remove('show');
+      });
 
-      modal.querySelector('[data-action="remove"]').addEventListener('click', () => {
-        if(!Array.isArray(card.processFlow) || card.processFlow.length === 0) return;
-        const lastIdx = card.processFlow.length - 1;
-        if(card.processFlow[lastIdx] !== p) {
-          alert('마지막 공정 기록만 삭제할 수 있습니다.');
-          return;
+      modal.classList.add('show');
+    }
+
+    function renderTabs(){
+      const tabs=$('#tabs'); tabs.innerHTML='';
+      CATS.forEach((c,i)=>{
+        const btn=document.createElement('button');
+        btn.className='tab'+(i===0?' active':'');
+        btn.textContent=c.label;
+        btn.dataset.cat=c.id;
+        btn.addEventListener('click',()=>{
+          $$('.tab').forEach(t=>t.classList.remove('active'));
+          btn.classList.add('active');
+          showBoard(c.id);
+          renderTodayCompleted(c.id);
+        });
+        tabs.appendChild(btn);
+      });
+    }
+
+    function showBoard(catId){
+      const boards=$('#boards'); boards.innerHTML='';
+      boards.appendChild(buildBoard(catId));
+    }
+
+    function buildBoard(catId){
+      const sec=document.createElement('div'); sec.className='board active';
+      sec.appendChild(buildPoolLane(catId));
+      const machineWrap=document.createElement('div'); machineWrap.className='machine-lanes';
+      const cat=CATS.find(c=>c.id===catId);
+      cat.machines.forEach((name,idx)=>{
+        machineWrap.appendChild(buildLane(catId,`m${idx+1}`,name));
+      });
+      sec.appendChild(machineWrap);
+      return sec;
+    }
+
+    function buildPoolLane(catId){
+      const k=`${catId}::pool`;
+      const wrap=document.createElement('div'); wrap.className='pool-lane';
+      const h=document.createElement('h3');
+      h.innerHTML=`대기풀 <span class="count">(${state.lanes[k].length})</span>`;
+      wrap.appendChild(h);
+
+      const drop=document.createElement('div');
+      drop.className='drop';
+      drop.dataset.key=k;
+      addDnd(drop);
+      wrap.appendChild(drop);
+
+      if(!state.lanes[k].length){
+        const emp=document.createElement('div'); emp.className='empty'; emp.textContent='카드 없음';
+        drop.appendChild(emp);
+      }else{
+        state.lanes[k].forEach(card=> drop.appendChild(cardEl(card, catId)));
+      }
+      return wrap;
+    }
+
+    function buildLane(catId, laneId, title){
+      const k=`${catId}::${laneId}`;
+      const wrap=document.createElement('div'); 
+      wrap.className='lane';
+      wrap.dataset.key = k;
+      
+      const isBroken = state.brokenMachines[catId] && state.brokenMachines[catId][laneId];
+      if(isBroken) wrap.classList.add('broken');
+
+      const h=document.createElement('h3');
+      h.innerHTML=`
+        <div class="title-left">
+          <span>${title}</span>
+          <span class="count">(${state.lanes[k].length})</span>
+        </div>
+        <label class="broken-check" onclick="event.stopPropagation()">
+          <input type="checkbox" data-cat="${catId}" data-lane="${laneId}" ${isBroken?'checked':''}>
+          고장
+        </label>
+      `;
+      wrap.appendChild(h);
+
+      const checkbox = h.querySelector('input[type="checkbox"]');
+      checkbox.addEventListener('change', (e)=>{
+        e.stopPropagation();
+        const checked = checkbox.checked;
+        if(!state.brokenMachines[catId]) state.brokenMachines[catId] = {};
+        state.brokenMachines[catId][laneId] = checked;
+        
+        if(checked){
+          wrap.classList.add('broken');
+        }else{
+          wrap.classList.remove('broken');
         }
-        if(confirm('이 공정 완료 기록을 삭제하시겠습니까?')) {
-          let loc = 'pool', idx = state.pool.findIndex(c => c.id === card.id);
-          if(idx < 0) {
-            loc = 'completed'; idx = state.completed.findIndex(c => c.id === card.id);
+        
+        save();
+      });
+
+      const drop=document.createElement('div');
+      drop.className='drop';
+      drop.dataset.key=k;
+      addDnd(drop);
+      wrap.appendChild(drop);
+
+      if(!state.lanes[k].length){
+        const emp=document.createElement('div'); emp.className='empty'; emp.textContent='카드 없음';
+        drop.appendChild(emp);
+      }else{
+        state.lanes[k].forEach(card=> drop.appendChild(cardEl(card, catId)));
+      }
+      return wrap;
+    }
+
+    function parseDue(d){
+      if(!d) return null;
+      if(typeof d==='number') return new Date(d);
+      if(typeof d==='string'){
+        const s = d.includes('T') ? d : `${d}T23:59:59`;
+        const dt = new Date(s);
+        return isNaN(dt) ? null : dt;
+      }
+      return null;
+    }
+    function daysUntilDue(due){
+      const dueDt = parseDue(due);
+      if(!dueDt) return Infinity;
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      return Math.ceil((dueDt - today)/86400000);
+    }
+    function getUrgency(due){
+      const dl = daysUntilDue(due);
+      if(dl === 3) return { icons:1, blink:false, days:dl };
+      if(dl === 2) return { icons:2, blink:false, days:dl };
+      if(dl <= 1) return { icons:1, blink:true,  days:dl };
+      return { icons:0, blink:false, days:dl };
+    }
+
+    function findCardLocation(cardId){
+      for(const [key, arr] of Object.entries(state.lanes)){
+        const idx = arr.findIndex(c => c.id === cardId);
+        if(idx > -1) return { key, index: idx };
+      }
+      return null;
+    }
+
+    function refreshLane(key, catId){
+      const drop = document.querySelector(`.drop[data-key="${key}"]`);
+      if(!drop) return;
+      const arr = state.lanes[key] || [];
+      drop.innerHTML = '';
+      if(arr.length === 0){
+        const emp = document.createElement('div');
+        emp.className = 'empty';
+        emp.textContent = '카드 없음';
+        drop.appendChild(emp);
+      }else{
+        arr.forEach(card => drop.appendChild(cardEl(card, catId)));
+      }
+      const countEl = drop.parentElement?.querySelector('h3 .count');
+      if(countEl) countEl.textContent = `(${arr.length})`;
+    }
+
+    function addDnd(dropEl){
+      dropEl.addEventListener('dragover', e=>{
+        const laneEl = dropEl.closest('.lane');
+        if(laneEl && laneEl.classList.contains('broken')) return;
+        
+        e.preventDefault();
+        dropEl.classList.add('dragover');
+      });
+      dropEl.addEventListener('dragleave', ()=>{
+        dropEl.classList.remove('dragover');
+      });
+      dropEl.addEventListener('drop', e=>{
+        e.preventDefault();
+        dropEl.classList.remove('dragover');
+
+        const laneEl = dropEl.closest('.lane');
+        if(laneEl && laneEl.classList.contains('broken')) return;
+
+        const targetKey = dropEl.dataset.key;
+        if(!targetKey) return;
+        const targetCat = targetKey.split('::')[0];
+
+        const id = e.dataTransfer.getData('text/plain');
+        if(!id) return;
+
+        const loc = findCardLocation(id);
+        if(!loc) return;
+        if(loc.key === targetKey) return;
+
+        const [card] = state.lanes[loc.key].splice(loc.index, 1);
+
+        if(targetKey.endsWith('::pool')){
+          card.status = 'wait';
+        }else{
+          card.status = 'progress';
+          if(!card.startedAt) {
+            card.startedAt = Date.now();
+            card.startedBy = currentUserName;
           }
-          if(idx < 0) {
-            for(const mid in state.lanes) {
-              const i = state.lanes[mid].findIndex(c => c.id === card.id);
-              if(i >= 0) { loc = mid; idx = i; break; }
+        }
+
+        state.lanes[targetKey].push(card);
+
+        refreshLane(loc.key, loc.key.split('::')[0]);
+        refreshLane(targetKey, targetCat);
+        save();
+      });
+    }
+
+    function cardEl(card, catId){
+      if(!card.status) card.status='wait';
+      const el=document.createElement('div');
+      el.className=`wcard ${card.status}`;
+      el.draggable=true;
+      el.dataset.id=card.id;
+      el.innerHTML=`
+        <div class="title-row">
+          <div class="title">${card.title}</div>
+          <div class="urgency" aria-label="due-indicator"></div>
+        </div>
+        <div class="meta">
+          <span>${card.vendor||''}</span>
+          <span>·</span>
+          <span>수량 ${card.qty??0}</span>
+        </div>
+        <div class="status-sel">
+          <button data-status="wait" class="${card.status==='wait'?'on':''}">대기</button>
+          <button data-status="progress" class="${card.status==='progress'?'on':''}">진행중</button>
+          <button data-status="done" class="${card.status==='done'?'on':''}">완료</button>
+        </div>
+      `;
+
+      const u = getUrgency(card.dueDate);
+      const urgEl = el.querySelector('.urgency');
+      if(u.icons > 0){
+        urgEl.textContent = '🚨'.repeat(u.icons);
+        if(card.dueDate){
+          const sign = u.days >= 0 ? 'D-' : 'D+';
+          urgEl.title = `납기 ${sign}${Math.abs(u.days)}`;
+        }
+      }
+      el.classList.toggle('urgent-blink', !!u.blink);
+
+      el.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', card.id);
+        setTimeout(()=> el.classList.add('dragging'),0);
+      });
+      el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
+
+      el.querySelectorAll('[data-status]').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          e.stopPropagation();
+          const newStatus=btn.dataset.status;
+          const oldStatus=card.status;
+
+          if(newStatus==='progress' && oldStatus!=='progress'){
+            card.startedAt=Date.now();
+            card.startedBy=currentUserName;
+          }
+          if(newStatus==='done' && oldStatus!=='done'){
+            // 마지막 공정인지 확인
+            if(isLastProcess(card, catId)){
+              // 최종 수량 입력 모달 표시
+              showFinalQtyModal(card, catId);
+              return;
+            }
+
+            // 중간 공정: 다음 공정으로 자동 이동
+            card.completedAt=Date.now();
+            card.completedBy=currentUserName;
+            if(!card.startedAt){
+              card.startedAt=Date.now();
+              card.startedBy=currentUserName;
+            }
+            const loc=findCardLocation(card.id);
+            if(loc){
+              const [removed]=state.lanes[loc.key].splice(loc.index,1);
+              const curCatId = catId;
+              if(!state.completed[curCatId]) state.completed[curCatId]=[];
+              state.completed[curCatId].unshift(removed);
+
+              const nextCat = getNextCatId(removed, curCatId);
+              if(nextCat){
+                const poolKey = `${nextCat}::pool`;
+                if(!Array.isArray(state.lanes[poolKey])) state.lanes[poolKey]=[];
+                const nextCard = {
+                  ...removed,
+                  status:'wait',
+                  startedAt:null,
+                  completedAt:null,
+                  startedBy:null,
+                  completedBy:null,
+                  currentCat: nextCat
+                };
+                state.lanes[poolKey].unshift(nextCard);
+                refreshLane(poolKey, nextCat);
+              }
+
+              refreshLane(loc.key, curCatId);
+              renderTodayCompleted(curCatId);
+              save();
+              return;
             }
           }
 
-          card.processFlow.pop();
+          card.status=newStatus;
+          save();
+          el.className=`wcard ${newStatus}`;
+          el.querySelectorAll('[data-status]').forEach(b=>b.classList.toggle('on', b.dataset.status===newStatus));
+        });
+      });
 
-          if(loc === 'completed') {
-            state.completed.splice(idx, 1);
-            card.status = 'wait';
-            delete card.completedAt;
-            delete card.completedBy;
-            state.pool.push(card);
+      return el;
+    }
+
+    function repaintUrgency(){
+      document.querySelectorAll('.wcard').forEach(el=>{
+        const id = el.dataset.id;
+        const loc = findCardLocation(id);
+        if(!loc) return;
+        const card = state.lanes[loc.key][loc.index];
+        const u = getUrgency(card.dueDate);
+        const urgEl = el.querySelector('.urgency');
+        if(urgEl){
+          urgEl.textContent = u.icons>0 ? '🚨'.repeat(u.icons) : '';
+          if(card.dueDate){
+            const sign = u.days >= 0 ? 'D-' : 'D+';
+            urgEl.title = `납기 ${sign}${Math.abs(u.days)}`;
+          }else{
+            urgEl.removeAttribute('title');
           }
-          saveState();
-          close();
-          renderOverview();
-          if(state.currentCat) renderBoard(state.currentCat);
         }
+        el.classList.toggle('urgent-blink', !!u.blink);
       });
     }
 
-    // ========== 최종완료 모달 ==========
-    function showCompletedModal(card) {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-
-      const flowHTML = (card.processFlow || []).map(p => {
-        const catLabel = CATS.find(c => c.id === p.process)?.label || p.process;
-        return `<li>
-          <strong>${catLabel}</strong>: 투입 ${NF.format(p.inputQty || 0)} → 산출 ${NF.format(p.outputQty || 0)}
-          ${p.defectQty != null ? ` (불량 ${NF.format(p.defectQty)})` : ''}
-          <div style="font-size:11px;color:#666;margin-top:2px">
-            ${p.completedBy || ''} / ${p.completedAt ? formatDateTime(p.completedAt) : ''}
-          </div>
-        </li>`;
-      }).join('');
-
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>완료 상세</h3>
-          <button class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-info">
-            <div class="modal-info-row"><div class="label">작업명</div><div>${esc(card.title || card.productName || '-')}</div></div>
-            <div class="modal-info-row"><div class="label">거래처</div><div>${esc(card.vendor || '-')}</div></div>
-            <div class="modal-info-row"><div class="label">목표 수량</div><div>${NF.format(card.totalProducts || 0)}개</div></div>
-            ${card.completedBy ? `<div class="modal-info-row"><div class="label">완료자</div><div>${esc(card.completedBy)}</div></div>` : ''}
-            ${card.completedAt ? `<div class="modal-info-row"><div class="label">완료일시</div><div>${formatDateTime(card.completedAt)}</div></div>` : ''}
-          </div>
-          ${flowHTML ? `<div class="section-title">공정 이력</div><ul class="summary-list">${flowHTML}</ul>` : ''}
-        </div>
-        <div class="modal-footer">
-          <button class="btn" data-action="close">닫기</button>
-        </div>
-      `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-
-      const close = () => document.body.removeChild(overlay);
-      overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
-      modal.querySelector('.modal-close').addEventListener('click', close);
-      modal.querySelector('[data-action="close"]').addEventListener('click', close);
-    }
-
-    // ========== 이벤트 ==========
-    document.getElementById('btnBack').addEventListener('click', renderOverview);
-
-    // ========== 초기화 ==========
-    loadState();
-    renderOverview();
+    renderTabs();
+    showBoard(CATS[0].id);
+    renderTodayCompleted(CATS[0].id);
+    repaintUrgency();
+    setInterval(repaintUrgency, 60000);
+  })();
   </script>
 </body>
 </html>

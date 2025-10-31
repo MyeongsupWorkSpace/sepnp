@@ -20,66 +20,12 @@
       font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,"Noto Sans KR",sans-serif; 
       color:#111; 
       background:#f5f6f8; 
-      padding-top:60px !important; 
+      padding-top:60px; 
     }
-    
-    /* 고정 헤더 */
-    .fixed-header { 
-      position: fixed !important; 
-      top: 0 !important; 
-      left: 0 !important; 
-      right: 0 !important; 
-      height: 60px !important; 
-      background: #fff !important; 
-      border-bottom: 1px solid var(--bd) !important; 
-      z-index: 9999 !important; 
-      display: flex !important; 
-      align-items: center !important; 
-      padding: 0 24px !important;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
-    }
-    .fixed-header h1 { 
-      margin: 0 !important; 
-      font-size: 20px !important; 
-      font-weight: 600 !important; 
-      color: #111 !important;
-      flex: 1 !important;
-    }
-    .header-tabs {
-      display: flex !important;
-      gap: 8px !important;
-      align-items: center !important;
-    }
-    .header-tabs a {
-      padding: 8px 16px !important;
-      border-radius: 6px !important;
-      text-decoration: none !important;
-      color: var(--fg) !important;
-      font-size: 14px !important;
-      transition: all 0.2s !important;
-    }
-    .header-tabs a:hover {
-      background: var(--bg-soft) !important;
-      color: #111 !important;
-    }
-    .header-tabs a.active {
-      background: var(--primary) !important;
-      color: #fff !important;
-    }
-    .btn-logout {
-      padding: 8px 16px !important;
-      border: 1px solid var(--bd) !important;
-      border-radius: 6px !important;
-      background: #fff !important;
-      color: var(--fg) !important;
-      cursor: pointer !important;
-      font-size: 14px !important;
-      margin-left: 16px !important;
-    }
-    .btn-logout:hover {
-      background: var(--bg-soft) !important;
-    }
-    
+
+    /* [삭제됨] 고정 헤더(.fixed-header, .header-tabs, .btn-logout) 인라인 스타일
+       네비게이션은 assets/nav.css에서만 관리합니다. */
+
     .container { max-width: 1400px; margin: 24px auto; padding: 0 16px; }
     h2 { margin:0 0 16px; }
     .card { background:var(--bg-card); border:1px solid var(--bd); border-radius:12px; padding:24px; }
@@ -156,12 +102,6 @@
       text-align: center;
       padding: 60px 20px;
       color: var(--fg2);
-    }
-    .empty-state svg {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      opacity: 0.3;
     }
     
     .badge {
@@ -350,20 +290,22 @@
 
 <script src="assets/nav.js"></script>
 <script>
-// 로그인 확인
+// 로그인 확인(동일 동작)
 const empNo = sessionStorage.getItem('sepnp_emp_no');
 if (!empNo) {
   window.location.href = 'index.html';
 }
 
-// 로그아웃 버튼
-const btnLogout = document.getElementById('btnLogout');
-if(btnLogout) {
-  btnLogout.addEventListener('click', () => {
-    sessionStorage.removeItem('sepnp_emp_no');
-    window.location.href = 'index.html';
-  });
-}
+// 로그아웃 버튼 연결(nav.js가 렌더한 버튼 사용)
+document.addEventListener('DOMContentLoaded', () => {
+  const btnLogout = document.getElementById('btnLogout');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      sessionStorage.removeItem('sepnp_emp_no');
+      window.location.href = 'index.html';
+    });
+  }
+});
 
 const PROD_KEY = 'sepnp_products_v1';
 const $ = (s) => document.querySelector(s);

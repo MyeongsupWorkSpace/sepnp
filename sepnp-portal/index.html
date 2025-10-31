@@ -16,18 +16,18 @@
 
         /* 히어로 섹션 */
         .hero-container {
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 40px 20px;
             box-sizing: border-box;
         }
 
         .hero {
             position: relative;
             width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
             background: #fff;
             border-radius: 16px;
             overflow: hidden;
@@ -36,12 +36,14 @@
 
         .hero-img {
             width: 100%;
-            height: 300px;
+            height: auto;
+            display: block;
             object-fit: cover;
+            max-height: 600px;
         }
 
         .hero-text {
-            padding: 40px;
+            padding: 50px 40px;
             text-align: center;
         }
 
@@ -80,6 +82,8 @@
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn:hover {
@@ -96,6 +100,19 @@
             background: #006abe;
         }
 
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .hero-text {
+                padding: 30px 20px;
+            }
+            .hero-text h1 {
+                font-size: 32px;
+            }
+            .tagline {
+                font-size: 20px;
+            }
+        }
+
         /* 모달 오버레이 */
         .overlay {
             position: fixed;
@@ -110,6 +127,7 @@
             opacity: 1;
             visibility: visible;
             transition: all 0.2s;
+            z-index: 1000;
         }
 
         .overlay.hidden {
@@ -173,7 +191,7 @@
     <!-- 메인 랜딩 화면 -->
     <main class="hero-container">
         <div class="hero">
-            <img src="https://images.unsplash.com/photo-1507668077129-56e328b6b6b9?q=80&w=1200" 
+            <img src="image/officeview.jpg" 
                  alt="회사 전경" class="hero-img">
             <div class="hero-text">
                 <h1>SEPNP</h1>

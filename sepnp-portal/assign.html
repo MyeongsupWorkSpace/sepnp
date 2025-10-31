@@ -1,132 +1,132 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>인쇄배정 - 성은지기인쇄</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>인쇄 배정</title>
   <link rel="stylesheet" href="assets/nav.css">
+  <style>
+    :root{--primary:#2563eb;--border:#e5e7eb;--bg:#f9fafb;--text:#111;--muted:#6b7280}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--text);padding-top:60px}
+    .container{max-width:1600px;margin:20px auto;padding:0 16px}
+    h2{font-size:20px;margin-bottom:16px}
+    .board{display:grid;grid-template-columns:280px 1fr;gap:20px}
+    .pool-section,.lanes-section{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px}
+    .pool-section h3,.lanes-section h3{font-size:16px;margin-bottom:12px;color:var(--muted)}
+    .pool-cards{display:flex;flex-direction:column;gap:10px;min-height:400px}
+    .pool-card{padding:12px;background:#fef3c7;border:1px solid #fde047;border-radius:8px;cursor:pointer;transition:all .2s}
+    .pool-card:hover{background:#fde047;transform:translateY(-2px)}
+    .card-title{font-weight:600;margin-bottom:6px}
+    .card-meta{font-size:13px;color:#666}
+    .card-meta div{margin-top:4px}
+    .lanes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+    .lane{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:300px}
+    .lane h4{font-size:14px;margin-bottom:10px;color:var(--muted)}
+    .lane-cards{display:flex;flex-direction:column;gap:8px}
+    .lane-card{padding:10px;background:#fff;border:1px solid var(--border);border-radius:6px;cursor:move;transition:all .15s}
+    .lane-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.1)}
+    .lane-card.assigned{background:#dbeafe;border-color:#93c5fd}
+    .lane-card.done{background:#d1fae5;border-color:#86efac}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:100}
+    .modal.show{display:flex}
+    .modal-content{background:#fff;border-radius:12px;padding:24px;width:min(500px,90%);max-height:80vh;overflow:auto}
+    .modal-content h3{margin-bottom:16px}
+    .modal-content .row{display:grid;grid-template-columns:100px 1fr;gap:10px;margin:10px 0;align-items:center}
+    .modal-content .label{font-weight:600;color:var(--muted)}
+    .modal-content select,.modal-content input{height:36px;padding:0 10px;border:1px solid var(--border);border-radius:6px;font-size:14px}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+    .btn{height:36px;padding:0 16px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:14px}
+    .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+    .btn:hover{opacity:.9}
+  </style>
 </head>
 <body>
-  <!-- 고정 헤더 -->
   <header class="fixed-header"></header>
 
   <main class="container">
-    <section class="card catalog-wrap">
-      <div class="catalog">
-        <h3>인쇄 배정 등록</h3>
-        <form id="assignForm">
-          <label>제품
-            <select id="assignProd" required></select>
-          </label>
-
-          <!-- 제품 상세 미리보기 -->
-          <div id="assignProdPreview" class="mini" style="margin-top:6px;color:var(--muted)"></div>
-
-          <label>수량 <input id="assignQty" type="number" min="1" required></label>
-          <label>납기일 <input id="assignDue" type="date" required></label>
-
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-            <button class="btn primary" type="submit">등록</button>
-            <button class="btn" type="button" id="clearAssigns">전체삭제</button>
-          </div>
-        </form>
-
-        <h4 style="margin-top:12px">배정 풀 (드래그하여 기계에 배치)</h4>
-        <input id="searchAssign" class="search" placeholder="제품명/거래처 검색">
-        <div class="catalog-list" id="assignPool"></div>
+    <h2>인쇄 배정</h2>
+    <div class="board">
+      <div class="pool-section">
+        <h3>배정 풀 (<span id="poolCount">0</span>)</h3>
+        <div class="pool-cards" id="assignPool"></div>
       </div>
-
-      <div class="board">
-        <div class="machine-board">
-          <h3>1호기</h3>
-          <div class="machine-droppable" id="m1"></div>
-        </div>
-        <div class="machine-board">
-          <h3>2호기</h3>
-          <div class="machine-droppable" id="m2"></div>
-        </div>
-        <div class="machine-board">
-          <h3>3호기</h3>
-          <div class="machine-droppable" id="m3"></div>
-        </div>
+      <div class="lanes-section">
+        <h3>인쇄기 현황</h3>
+        <div class="lanes-grid" id="lanesGrid"></div>
       </div>
-    </section>
+    </div>
   </main>
+
+  <div id="assignModal" class="modal">
+    <div class="modal-content">
+      <h3>배정하기</h3>
+      <div id="assignForm"></div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeAssignModal()">취소</button>
+        <button class="btn primary" onclick="confirmAssign()">배정</button>
+      </div>
+    </div>
+  </div>
 
   <script src="assets/nav.js"></script>
   <script>
-    // 로그인 확인
-    const empNo = sessionStorage.getItem('sepnp_emp_no');
-    const empName = sessionStorage.getItem('sepnp_emp_name') || empNo || '미상';
-    if(!empNo) location.href = 'index.html';
-
-    // ========== 공통 유틸 ==========
     const NF = new Intl.NumberFormat('ko-KR');
-    const esc = (s) => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const now = () => new Date().toISOString();
-    const today = () => new Date().toISOString().slice(0,10);
+    const esc = s => (s==null?'':String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]));
 
-    // ========== 설비 정의 ==========
-    const MACHINES = [
-      { id:'print1', name:'인쇄 1호기' },
-      { id:'print2', name:'인쇄 2호기' },
-      { id:'print3', name:'인쇄 3호기' }
-    ];
+    const PRESSES = ['1호기','2호기','3호기'];
+    let state = { pool: [], lanes: {}, completed: [], history: [] };
+    let selectedCard = null;
 
-    // ========== 상태 관리 ==========
-    let state = {
-      pool: [],      // 미배정 작업
-      lanes: {},     // 각 호기별 작업
-      completed: []  // 완료된 작업
-    };
-
-    MACHINES.forEach(m => state.lanes[m.id] = []);
-
-    // ========== 저장/로드 ==========
     function saveState() {
       localStorage.setItem('sepnp_assign_v2', JSON.stringify(state));
     }
 
     function loadState() {
       const saved = localStorage.getItem('sepnp_assign_v2');
-      if(saved) {
+      if (saved) {
         try {
-          const parsed = JSON.parse(saved);
-          state.pool = Array.isArray(parsed.pool) ? parsed.pool : [];
-          state.lanes = parsed.lanes || {};
-          state.completed = Array.isArray(parsed.completed) ? parsed.completed : [];
-          MACHINES.forEach(m => {
-            if(!Array.isArray(state.lanes[m.id])) state.lanes[m.id] = [];
-          });
-        } catch(e) {
-          console.error('loadState error:', e);
+          state = JSON.parse(saved);
+          if (!state.pool) state.pool = [];
+          if (!state.lanes) state.lanes = {};
+          if (!state.completed) state.completed = [];
+          if (!state.history) state.history = [];
+        } catch (e) {
+          console.error('assign state parse error', e);
+          state = { pool: [], lanes: {}, completed: [], history: [] };
         }
+      } else {
+        state = { pool: [], lanes: {}, completed: [], history: [] };
       }
 
-      // ========== 수주 오더 → 카드 동기화 ==========
+      PRESSES.forEach(p => {
+        if (!Array.isArray(state.lanes[p])) state.lanes[p] = [];
+      });
+
+      // 주문 → 배정 풀 동기화 (인쇄 공정이 있는 주문만)
       const orders = JSON.parse(localStorage.getItem('sepnp_orders_v1') || '[]');
       orders.forEach(o => {
-        if(!o.id) return;
-        
-        // 이미 존재하는지 확인 (pool, lanes, completed 모두 체크)
+        if (!o.id) return;
+        const hasPrint = Array.isArray(o?.productSnapshot?.processes) &&
+                         o.productSnapshot.processes.some(x => /인쇄|print/i.test(String(x)));
+        if (!hasPrint) return; // 인쇄 없는 주문은 스킵
+
         const exists = [
           ...state.pool,
           ...Object.values(state.lanes).flat(),
           ...state.completed
         ].some(c => c.orderId === o.id);
-        
-        if(!exists) {
-          // 새 카드 생성하여 미배정 풀에 추가
+        if (!exists) {
+          const qty = Number(o.sheetsQty || o.qty || 0) + Number(o.extraSheets || o.extraQty || 0);
           state.pool.push({
-            id: `card_${Date.now()}_${Math.random().toString(36).slice(2,9)}`,
+            id: `card_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
             orderId: o.id,
             productName: o.productName || '미상',
             vendor: o.vendor || '',
-            quantity: o.quantity || 0,
+            quantity: qty,
             dueDate: o.dueDate || '',
             status: 'wait',
-            createdAt: o.createdAt || now()
+            createdAt: o.createdAt ? new Date(o.createdAt).toISOString() : new Date().toISOString()
           });
         }
       });
@@ -134,20 +134,13 @@
       saveState();
     }
 
-    // ========== 렌더링 ==========
-    function render() {
-      renderPool();
-      renderLanes();
-      renderStats();
-    }
-
     function renderPool() {
-      const container = document.getElementById('poolCards');
-      if(state.pool.length === 0) {
+      const container = document.getElementById('assignPool');
+      if (!container) return;
+      if (state.pool.length === 0) {
         container.innerHTML = '<div style="text-align:center;color:#999;padding:40px">미배정 작업이 없습니다</div>';
         return;
       }
-
       container.innerHTML = '';
       state.pool.forEach(card => {
         const div = document.createElement('div');
@@ -163,207 +156,89 @@
         div.addEventListener('click', () => showAssignModal(card));
         container.appendChild(div);
       });
+      document.getElementById('poolCount').textContent = state.pool.length;
     }
 
     function renderLanes() {
-      const container = document.getElementById('lanesArea');
-      container.innerHTML = '';
-
-      MACHINES.forEach(m => {
+      const grid = document.getElementById('lanesGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      PRESSES.forEach(p => {
         const lane = document.createElement('div');
         lane.className = 'lane';
-
-        const cards = state.lanes[m.id] || [];
-        const cardsHTML = cards.map(c => {
-          const statusClass = c.status === 'prog' ? 'progress' : c.status === 'error' ? 'error' : 'wait';
-          const statusText = c.status === 'prog' ? '🔵 진행중' : c.status === 'error' ? '🔴 고장' : '⚪ 대기';
-          
-          return `<div class="work-card ${statusClass}" data-card-id="${c.id}">
-            <div class="card-title">${esc(c.productName)}</div>
+        lane.innerHTML = `<h4>${p} (${(state.lanes[p] || []).length})</h4><div class="lane-cards" data-press="${p}"></div>`;
+        const cards = lane.querySelector('.lane-cards');
+        (state.lanes[p] || []).forEach(card => {
+          const div = document.createElement('div');
+          div.className = `lane-card ${card.status || 'assigned'}`;
+          div.innerHTML = `
+            <div class="card-title">${esc(card.productName)}</div>
             <div class="card-meta">
-              <div>${statusText}</div>
-              <div>거래처: ${esc(c.vendor)}</div>
-              <div>수량: ${NF.format(c.quantity)}개</div>
+              <div>${esc(card.vendor)} / ${NF.format(card.quantity)}개</div>
+              ${card.dueDate ? `<div>납기: ${card.dueDate}</div>` : ''}
             </div>
-          </div>`;
-        }).join('');
-
-        lane.innerHTML = `
-          <div class="lane-header">
-            <div class="lane-title">${m.name}</div>
-            <div class="lane-count">${cards.length}건</div>
-          </div>
-          <div class="lane-cards">
-            ${cardsHTML || '<div style="text-align:center;color:#999;padding:30px;font-size:13px">비어있음</div>'}
-          </div>
-        `;
-
-        lane.querySelectorAll('.work-card').forEach(el => {
-          el.addEventListener('click', () => {
-            const cardId = el.dataset.cardId;
-            const card = cards.find(c => c.id === cardId);
-            if(card) showCardModal(card, m.id);
-          });
+          `;
+          cards.appendChild(div);
         });
-
-        container.appendChild(lane);
+        grid.appendChild(lane);
       });
     }
 
-    function renderStats() {
-      const totalWait = Object.values(state.lanes).flat().filter(c => c.status === 'wait').length;
-      const totalProg = Object.values(state.lanes).flat().filter(c => c.status === 'prog').length;
-      const totalError = Object.values(state.lanes).flat().filter(c => c.status === 'error').length;
-      const todayCompleted = state.completed.filter(c => c.completedAt && c.completedAt.startsWith(today())).length;
-
-      document.getElementById('statPool').textContent = state.pool.length;
-      document.getElementById('statWait').textContent = totalWait;
-      document.getElementById('statProg').textContent = totalProg;
-      document.getElementById('statError').textContent = totalError;
-      document.getElementById('statCompleted').textContent = todayCompleted;
-    }
-
-    // ========== 모달: 배정 ==========
     function showAssignModal(card) {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-
-      const machineOpts = MACHINES.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>작업 배정</h3>
-          <button class="modal-close">×</button>
+      selectedCard = card;
+      const form = document.getElementById('assignForm');
+      if (!form) return;
+      form.innerHTML = `
+        <div class="row">
+          <div class="label">제품</div>
+          <div>${esc(card.productName)}</div>
         </div>
-        <div class="modal-body">
-          <div class="info-grid">
-            <div class="info-row"><span class="label">제품명</span><span>${esc(card.productName)}</span></div>
-            <div class="info-row"><span class="label">거래처</span><span>${esc(card.vendor)}</span></div>
-            <div class="info-row"><span class="label">수량</span><span>${NF.format(card.quantity)}개</span></div>
-            ${card.dueDate ? `<div class="info-row"><span class="label">납기</span><span>${card.dueDate}</span></div>` : ''}
-          </div>
-          <div class="form-group">
-            <label>배정 호기</label>
-            <select id="machineSelect" class="form-control">${machineOpts}</select>
-          </div>
+        <div class="row">
+          <div class="label">수량</div>
+          <div>${NF.format(card.quantity)}개</div>
         </div>
-        <div class="modal-footer">
-          <button class="btn" onclick="this.closest('.modal-overlay').remove()">취소</button>
-          <button class="btn btn-primary" id="btnConfirmAssign">배정</button>
+        <div class="row">
+          <div class="label">배정 기기</div>
+          <select id="selectPress">
+            ${PRESSES.map(p => `<option value="${p}">${p}</option>`).join('')}
+          </select>
         </div>
       `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-
-      modal.querySelector('.modal-close').onclick = () => overlay.remove();
-      overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
-
-      modal.querySelector('#btnConfirmAssign').onclick = () => {
-        const machineId = modal.querySelector('#machineSelect').value;
-        const idx = state.pool.findIndex(c => c.id === card.id);
-        if(idx >= 0) {
-          state.pool.splice(idx, 1);
-          card.status = 'wait';
-          state.lanes[machineId].push(card);
-          saveState();
-          render();
-          overlay.remove();
-        }
-      };
+      document.getElementById('assignModal').classList.add('show');
     }
 
-    // ========== 모달: 카드 상세 ==========
-    function showCardModal(card, machineId) {
-      const overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      const modal = document.createElement('div');
-      modal.className = 'modal';
+    function closeAssignModal() {
+      document.getElementById('assignModal').classList.remove('show');
+      selectedCard = null;
+    }
 
-      const statusOpts = ['wait','prog','error'].map(s => {
-        const label = s === 'wait' ? '대기' : s === 'prog' ? '진행중' : '고장';
-        const sel = card.status === s ? 'selected' : '';
-        return `<option value="${s}" ${sel}>${label}</option>`;
-      }).join('');
-
-      modal.innerHTML = `
-        <div class="modal-header">
-          <h3>작업 관리</h3>
-          <button class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="info-grid">
-            <div class="info-row"><span class="label">제품명</span><span>${esc(card.productName)}</span></div>
-            <div class="info-row"><span class="label">거래처</span><span>${esc(card.vendor)}</span></div>
-            <div class="info-row"><span class="label">수량</span><span>${NF.format(card.quantity)}개</span></div>
-          </div>
-          <div class="form-group">
-            <label>상태</label>
-            <select id="statusSelect" class="form-control">${statusOpts}</select>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-danger" id="btnUnassign">배정 해제</button>
-          <button class="btn" onclick="this.closest('.modal-overlay').remove()">취소</button>
-          <button class="btn btn-success" id="btnComplete">완료</button>
-        </div>
-      `;
-
-      overlay.appendChild(modal);
-      document.body.appendChild(overlay);
-
-      modal.querySelector('.modal-close').onclick = () => overlay.remove();
-      overlay.onclick = (e) => { if(e.target === overlay) overlay.remove(); };
-
-      // 상태 변경 즉시 반영
-      modal.querySelector('#statusSelect').onchange = (e) => {
-        card.status = e.target.value;
-        if(card.status === 'prog' && !card.startedAt) {
-          card.startedAt = now();
-        }
+    function confirmAssign() {
+      if (!selectedCard) return;
+      const press = document.getElementById('selectPress').value;
+      const idx = state.pool.findIndex(c => c.id === selectedCard.id);
+      if (idx > -1) {
+        const [card] = state.pool.splice(idx, 1);
+        card.status = 'assigned';
+        card.assignedPress = press;
+        card.assignedAt = new Date().toISOString();
+        if (!Array.isArray(state.lanes[press])) state.lanes[press] = [];
+        state.lanes[press].push(card);
+        state.history.push({
+          action: 'assign',
+          cardId: card.id,
+          press: press,
+          timestamp: new Date().toISOString()
+        });
         saveState();
-        render();
-      };
-
-      // 배정 해제
-      modal.querySelector('#btnUnassign').onclick = () => {
-        if(confirm('배정을 해제하시겠습니까?')) {
-          const idx = state.lanes[machineId].findIndex(c => c.id === card.id);
-          if(idx >= 0) {
-            state.lanes[machineId].splice(idx, 1);
-            card.status = 'wait';
-            delete card.startedAt;
-            state.pool.push(card);
-            saveState();
-            render();
-            overlay.remove();
-          }
-        }
-      };
-
-      // 완료 처리
-      modal.querySelector('#btnComplete').onclick = () => {
-        if(confirm('작업을 완료 처리하시겠습니까?')) {
-          const idx = state.lanes[machineId].findIndex(c => c.id === card.id);
-          if(idx >= 0) {
-            state.lanes[machineId].splice(idx, 1);
-            card.status = 'done';
-            card.completedAt = now();
-            card.completedBy = empName;
-            state.completed.push(card);
-            saveState();
-            render();
-            overlay.remove();
-          }
-        }
-      };
+        renderPool();
+        renderLanes();
+        closeAssignModal();
+      }
     }
 
-    // ========== 초기화 ==========
     loadState();
-    render();
+    renderPool();
+    renderLanes();
   </script>
 </body>
 </html>
