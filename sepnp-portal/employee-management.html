@@ -27,8 +27,12 @@
     table{width:100%;border-collapse:collapse;background:#fff;font-size:13px}
     thead{background:#f8f9fa;position:sticky;top:0}
     th,td{padding:10px;border-bottom:1px solid #f1f3f5;text-align:center;white-space:nowrap}
+    .align-left{text-align:left}
     .badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
     .badge.pending{background:#fef3c7;color:#92400e}
+    .badge.active{background:#d1fae5;color:#065f46}
+    .badge.inactive{background:#fee2e2;color:#991b1b}
+    .badge.leave{background:#fef3c7;color:#92400e}
     .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
     .modal.show{display:flex}
     .modal-content{background:#fff;border-radius:12px;width:min(700px,92%);padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:90vh;overflow:auto}
@@ -185,6 +189,65 @@
     </div>
   </div>
 
+  <!-- 사원 상세/수정 모달 -->
+  <div id="detailModal" class="modal">
+    <div class="modal-content">
+      <h3>사원 정보 수정</h3>
+      <div class="form-grid">
+        <div class="form-row"><label>사원번호</label><input id="detailEmpNo" class="inp" readonly style="background:#f9fafb"></div>
+        <div class="form-row"><label>ID</label><input id="detailUsername" class="inp" readonly style="background:#f9fafb"></div>
+        <div class="form-row"><label>이름</label><input id="detailName" class="inp"></div>
+        <div class="form-row"><label>부서</label>
+          <select id="detailDept" class="sel"><option>생산부</option><option>품질관리부</option><option>영업부</option><option>관리부</option><option>연구개발부</option><option>물류부</option></select>
+        </div>
+        <div class="form-row"><label>직급</label>
+          <select id="detailPosition" class="sel"><option>사원</option><option>대리</option><option>과장</option><option>차장</option><option>부장</option><option>이사</option></select>
+        </div>
+        <div class="form-row"><label>연락처</label><input id="detailPhone" class="inp"></div>
+        <div class="form-row"><label>이메일</label><input id="detailEmail" class="inp" type="email"></div>
+        <div class="form-row"><label>입사일</label><input id="detailJoinDate" class="inp" type="date"></div>
+        <div class="form-row"><label>상태</label>
+          <select id="detailStatus" class="sel"><option value="active">재직</option><option value="leave">휴직</option><option value="inactive">퇴사</option></select>
+        </div>
+        <div class="form-row"><label>역할</label>
+          <select id="detailRole" class="sel"><option value="viewer">Viewer</option><option value="staff">Staff</option><option value="manager">Manager</option><option value="admin">Admin</option></select>
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>세부 권한</label>
+          <div class="perm-box">
+            <div class="perm-group" id="detailPermGroup">
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="employee.view"> 직원 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="employee.manage"> 직원 등록/수정/삭제</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="employee.export"> 직원 CSV 내보내기</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="dispatch.view"> 배차 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="dispatch.create"> 배차 등록</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="dispatch.edit"> 배차 수정</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="dispatch.cancel"> 배차 취소</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="dispatch.delete"> 배차 삭제</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="sales.view"> 매출현황 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="inventory.view"> 재고 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="quotation.view"> 견적서 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="product.view"> 제품 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="order.view"> 주문 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="plan.view"> 계획표 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="assign.view"> 배정 조회</label>
+              <label class="perm-item"><input type="checkbox" name="detailPerm" value="work.view"> 작업 조회</label>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button class="btn" type="button" id="btnDetailPermPreset">역할 프리셋</button>
+              <button class="btn" type="button" id="btnDetailPermClear">모두 해제</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn danger" data-perm="employee.manage" onclick="deleteEmployee()">삭제</button>
+        <button class="btn" onclick="closeDetail()">취소</button>
+        <button class="btn primary" data-perm="employee.manage" onclick="saveDetail()">저장</button>
+      </div>
+    </div>
+  </div>
+
   <script src="assets/perm.js"></script>
   <script src="assets/auth.js"></script>
   <script src="assets/nav.js"></script>
@@ -194,7 +257,8 @@
     const $ = s => document.querySelector(s);
     let employees = [];
     let pending = [];
-    let approveTarget = null; // pending 객체
+    let approveTarget = null;
+    let detailTarget = null; // 수정 대상 사원
 
     function loadAll(){
       employees = JSON.parse(localStorage.getItem(KEY_EMPLOYEES)||'[]');
@@ -227,7 +291,7 @@
           </td>
         </tr>
       `).join('');
-      Permissions.applyGates(document); // 버튼 권한 적용
+      Permissions.applyGates(document);
     }
 
     function openApprove(id){
@@ -336,7 +400,10 @@
         tbody.innerHTML = '<tr><td colspan="10" style="padding:24px;color:#6b7280">사원이 없습니다.</td></tr>';
         return;
       }
-      tbody.innerHTML = list.map(e=>`
+      tbody.innerHTML = list.map(e=>{
+        const statusBadge = e.status==='active'?'active':(e.status==='leave'?'leave':'inactive');
+        const statusText = e.status==='active'?'재직':(e.status==='leave'?'휴직':'퇴사');
+        return `
         <tr>
           <td>${e.empNo}</td>
           <td class="align-left"><strong>${e.name}</strong></td>
@@ -346,15 +413,105 @@
           <td>${e.phone||'-'}</td>
           <td class="align-left">${e.email||'-'}</td>
           <td>${e.joinDate||'-'}</td>
-          <td>${e.status==='active'?'재직':(e.status==='leave'?'휴직':'퇴사')}</td>
-          <td><a class="btn primary" href="#" onclick="alert('상세/수정 기능은 필요 시 추가하세요');return false;">상세</a></td>
-        </tr>
-      `).join('');
+          <td><span class="badge ${statusBadge}">${statusText}</span></td>
+          <td><button class="btn primary" onclick="openDetail('${e.id}')">상세</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function searchEmployee(){ renderEmployees(); }
+
+    function exportCSV(){
+      if(!Permissions.has('employee.export')){ alert('권한이 없습니다.'); return; }
+      const header = ['사번','이름','ID','부서','직급','연락처','이메일','입사일','상태','역할'];
+      const rows = employees.map(e=>[
+        e.empNo, e.name, e.username||'', e.dept||'', e.position||'',
+        e.phone||'', e.email||'', e.joinDate||'',
+        e.status==='active'?'재직':(e.status==='leave'?'휴직':'퇴사'),
+        e.role||'viewer'
+      ]);
+      const csv = [header].concat(rows).map(r=>r.map(v=>`"${v}"`).join(',')).join('\r\n');
+      const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `사원목록_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+    }
+
+    // 상세/수정 모달
+    function openDetail(id){
+      const emp = employees.find(e=>e.id===id);
+      if(!emp) return;
+      detailTarget = emp;
+
+      $('#detailEmpNo').value = emp.empNo;
+      $('#detailUsername').value = emp.username || '';
+      $('#detailName').value = emp.name;
+      $('#detailDept').value = emp.dept;
+      $('#detailPosition').value = emp.position;
+      $('#detailPhone').value = emp.phone||'';
+      $('#detailEmail').value = emp.email||'';
+      $('#detailJoinDate').value = emp.joinDate;
+      $('#detailStatus').value = emp.status;
+      $('#detailRole').value = emp.role||'viewer';
+
+      // 권한 체크
+      document.querySelectorAll("input[name='detailPerm']").forEach(b=>b.checked=false);
+      const perms = Array.isArray(emp.perms) && emp.perms.length
+        ? emp.perms
+        : (Permissions.ROLE_PRESETS[emp.role||'viewer'] || []);
+      if(perms.includes('*')){
+        document.querySelectorAll("input[name='detailPerm']").forEach(b=>b.checked=true);
+      }else{
+        perms.forEach(p=>{
+          const el = Array.from(document.querySelectorAll("input[name='detailPerm']")).find(b=>b.value===p);
+          if(el) el.checked = true;
+        });
+      }
+
+      $('#detailModal').classList.add('show');
+      Permissions.applyGates($('#detailModal'));
+    }
+
+    function closeDetail(){
+      detailTarget = null;
+      $('#detailModal').classList.remove('show');
+    }
+
+    function saveDetail(){
+      if(!Permissions.has('employee.manage')){ alert('권한이 없습니다.'); return; }
+      if(!detailTarget) return;
+
+      detailTarget.name = $('#detailName').value.trim();
+      detailTarget.dept = $('#detailDept').value;
+      detailTarget.position = $('#detailPosition').value;
+      detailTarget.phone = $('#detailPhone').value.trim();
+      detailTarget.email = $('#detailEmail').value.trim();
+      detailTarget.joinDate = $('#detailJoinDate').value;
+      detailTarget.status = $('#detailStatus').value;
+      detailTarget.role = $('#detailRole').value;
+      detailTarget.perms = getCheckedPerms('detailPerm');
+
+      saveEmployees();
+      renderEmployees();
+      closeDetail();
+      alert('사원 정보가 수정되었습니다.');
+    }
+
+    function deleteEmployee(){
+      if(!Permissions.has('employee.manage')){ alert('권한이 없습니다.'); return; }
+      if(!detailTarget) return;
+      if(!confirm(`${detailTarget.name} 사원을 삭제하시겠습니까?`)) return;
+
+      employees = employees.filter(e=>e.id!==detailTarget.id);
+      saveEmployees();
+      renderEmployees();
+      closeDetail();
+      alert('사원이 삭제되었습니다.');
     }
 
     // 프리셋 버튼
     document.addEventListener('DOMContentLoaded', ()=>{
-      // 기본 관리자 계정 보장
       if (window.Auth?.ensureDefaultAdmin) { Auth.ensureDefaultAdmin().then(()=>loadAll()); }
       else { loadAll(); }
 
@@ -370,11 +527,18 @@
       });
       $('#btnApprPermClear')?.addEventListener('click', ()=> document.querySelectorAll("input[name='apprPerm']").forEach(b=>b.checked=false));
 
+      $('#btnDetailPermPreset')?.addEventListener('click', ()=> {
+        const role = $('#detailRole').value; const preset = Permissions.ROLE_PRESETS[role]||[];
+        document.querySelectorAll("input[name='detailPerm']").forEach(b=>b.checked = preset.includes('*') || preset.includes(b.value));
+      });
+      $('#btnDetailPermClear')?.addEventListener('click', ()=> document.querySelectorAll("input[name='detailPerm']").forEach(b=>b.checked=false));
+
       // 모달 외부 클릭 닫기
       $('#approveModal')?.addEventListener('click', e=>{ if(e.target.id==='approveModal') closeApprove(); });
+      $('#detailModal')?.addEventListener('click', e=>{ if(e.target.id==='detailModal') closeDetail(); });
 
       // 검색 엔터
-      $('#searchQuery')?.addEventListener('keydown', e=>{ if(e.key==='Enter') renderEmployees(); });
+      $('#searchQuery')?.addEventListener('keydown', e=>{ if(e.key==='Enter') searchEmployee(); });
     });
   </script>
 </body>

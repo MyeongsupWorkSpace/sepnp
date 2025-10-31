@@ -43,7 +43,7 @@
     /* 설비 레인 */
     .machine-lanes{display:grid;grid-template-columns:repeat(auto-fill, minmax(var(--laneW),1fr));gap:12px}
     .lane{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius);display:flex;flex-direction:column;position:relative}
-    .lane.broken{opacity:0.5;pointer-events:none}
+    .lane.broken{opacity:0.5}
     .lane.broken::after{content:'고장';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:900;color:#dc2626;opacity:0.3;pointer-events:none}
     .lane h3{margin:0;padding:10px 12px;border-bottom:1px solid var(--bd);font-size:14px;display:flex;align-items:center;justify-content:space-between}
     .lane h3 .title-left{display:flex;align-items:center;gap:6px}
@@ -514,13 +514,20 @@
       checkbox.addEventListener('change', (e)=>{
         e.stopPropagation();
         const checked = checkbox.checked;
+        const catId = checkbox.dataset.cat;
+        const laneId = checkbox.dataset.lane;
+        
         if(!state.brokenMachines[catId]) state.brokenMachines[catId] = {};
         state.brokenMachines[catId][laneId] = checked;
         
         if(checked){
           wrap.classList.add('broken');
+          // 카드 드래그 완전 차단
+          drop.style.pointerEvents = 'none';
         }else{
           wrap.classList.remove('broken');
+          // 드래그 다시 활성화
+          drop.style.pointerEvents = '';
         }
         
         save();
