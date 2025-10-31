@@ -201,77 +201,85 @@
     <section class="menu-section">
       <h2 class="section-title">🎯 주요 기능</h2>
       <div class="card-grid">
-        <a href="print-plan.html" class="menu-card">
+        <a href="print-plan.html" class="menu-card" data-perm="plan.view" data-perm-mode="hide">
           <div class="menu-card-icon">📋</div>
           <h3 class="menu-card-title">인쇄계획표</h3>
           <p class="menu-card-desc">일일 인쇄 작업 계획을 확인하고 관리합니다</p>
         </a>
 
-        <a href="assign.html" class="menu-card">
+        <a href="assign.html" class="menu-card" data-perm="assign.view" data-perm-mode="hide">
           <div class="menu-card-icon">🖨️</div>
           <h3 class="menu-card-title">인쇄배정</h3>
           <p class="menu-card-desc">작업을 호기별로 배정하고 관리합니다</p>
         </a>
 
-        <a href="work-status.html" class="menu-card">
+        <a href="work-status.html" class="menu-card" data-perm="work.view" data-perm-mode="hide">
           <div class="menu-card-icon">📊</div>
           <h3 class="menu-card-title">작업현황</h3>
           <p class="menu-card-desc">실시간 작업 상태를 모니터링합니다</p>
         </a>
 
-        <a href="product-register.html" class="menu-card">
+        <a href="product-register.html" class="menu-card" data-perm="product.view" data-perm-mode="hide">
           <div class="menu-card-icon">➕</div>
           <h3 class="menu-card-title">제품 등록</h3>
           <p class="menu-card-desc">새로운 제품 정보를 등록합니다</p>
         </a>
 
-        <a href="order-register.html" class="menu-card">
+        <a href="order-register.html" class="menu-card" data-perm="order.view" data-perm-mode="hide">
           <div class="menu-card-icon">📝</div>
           <h3 class="menu-card-title">수주 오더 등록</h3>
           <p class="menu-card-desc">신규 주문을 접수하고 등록합니다</p>
         </a>
 
-        <a href="product-list.html" class="menu-card">
+        <a href="product-list.html" class="menu-card" data-perm="product.view" data-perm-mode="hide">
           <div class="menu-card-icon">📚</div>
           <h3 class="menu-card-title">제품 목록</h3>
           <p class="menu-card-desc">등록된 제품을 조회하고 관리합니다</p>
         </a>
 
-        <a href="inventory.html" class="menu-card">
+        <a href="inventory.html" class="menu-card" data-perm="inventory.view" data-perm-mode="hide">
           <div class="menu-card-icon">📦</div>
           <h3 class="menu-card-title">재고현황</h3>
           <p class="menu-card-desc">재고 수량을 확인하고 관리합니다</p>
         </a>
 
-        <a href="dispatch.html" class="menu-card">
+        <a href="dispatch.html" class="menu-card" data-perm="dispatch.view" data-perm-mode="hide">
           <div class="menu-card-icon">🚚</div>
           <h3 class="menu-card-title">배차관리</h3>
           <p class="menu-card-desc">배송 차량을 배정하고 관리합니다</p>
         </a>
 
-        <a href="sales.html" class="menu-card">
+        <a href="sales.html" class="menu-card" data-perm="sales.view" data-perm-mode="hide">
           <div class="menu-card-icon">💰</div>
           <h3 class="menu-card-title">매출현황</h3>
           <p class="menu-card-desc">매출 통계와 분석 정보를 확인합니다</p>
+        </a>
+
+        <a href="quotation.html" class="menu-card" data-perm="quotation.view" data-perm-mode="hide">
+          <div class="menu-card-icon">📄</div>
+          <h3 class="menu-card-title">견적서</h3>
+          <p class="menu-card-desc">견적서를 작성하고 관리합니다</p>
+        </a>
+
+        <a href="employee-management.html" class="menu-card" data-perm="employee.view" data-perm-mode="hide">
+          <div class="menu-card-icon">👥</div>
+          <h3 class="menu-card-title">사원관리</h3>
+          <p class="menu-card-desc">사원 정보를 등록하고 관리합니다</p>
         </a>
       </div>
     </section>
   </main>
 
+  <script src="assets/perm.js"></script>
   <script src="assets/nav.js"></script>
   <script>
     // 로그인 확인
     const empNo = sessionStorage.getItem('sepnp_emp_no');
     const empName = sessionStorage.getItem('sepnp_emp_name');
-    
-    if (!empNo) {
-      window.location.href = 'index.html';
-    }
+    if (!empNo) { window.location.href = 'index.html'; }
 
-    // 환영 메시지
     document.getElementById('welcomeMsg').textContent = `${empName || '사용자'}님 환영합니다`;
 
-    // 통계 데이터 로드
     function loadStats() {
       try {
         // 작업 현황
@@ -310,7 +318,10 @@
       }
     }
 
-    loadStats();
+    document.addEventListener('DOMContentLoaded', ()=>{
+      Permissions.applyGates();
+      loadStats();
+    });
   </script>
 </body>
 </html>

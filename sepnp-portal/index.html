@@ -100,6 +100,12 @@
             background: #006abe;
         }
 
+        /* 탭 */
+        .tabs{display:flex;gap:8px;margin-bottom:12px}
+        .tab{flex:1;text-align:center;padding:10px;border:1px solid #ddd;border-radius:8px;cursor:pointer;background:#f8f9fa}
+        .tab.active{background:#fff;border-color:#0078d4;color:#0078d4;font-weight:700}
+        .hidden{display:none}
+
         /* 반응형 */
         @media (max-width: 768px) {
             .hero-text {
@@ -191,8 +197,7 @@
     <!-- 메인 랜딩 화면 -->
     <main class="hero-container">
         <div class="hero">
-            <img src="image/officeview.jpg" 
-                 alt="회사 전경" class="hero-img">
+            <img src="image/officeview.jpg" alt="회사 전경" class="hero-img">
             <div class="hero-text">
                 <h1>SEPNP</h1>
                 <p class="tagline">품질과 신뢰로 만드는 패키징</p>
@@ -205,72 +210,143 @@
         </div>
     </main>
 
-    <!-- 사원 로그인 모달 -->
+    <!-- 사원 로그인/회원가입 모달 -->
     <div id="empLoginOverlay" class="overlay hidden" aria-hidden="true">
         <div class="login-card" role="dialog" aria-modal="true">
-            <h2>사원 로그인</h2>
-            <p class="mini">사원번호를 입력하세요.</p>
-            <form id="empLoginForm">
-                <label>사원번호 <input id="empLoginNo" inputmode="numeric" autocomplete="username" required></label>
-                <div class="form-actions">
-                    <button type="submit" class="btn primary">입장</button>
-                    <button type="button" id="empLoginCancel" class="btn">취소</button>
-                </div>
-                <p id="empLoginError" class="error-message hidden"></p>
-            </form>
+            <div class="tabs">
+                <button id="tabLogin" class="tab active" type="button">로그인</button>
+                <button id="tabRegister" class="tab" type="button">회원가입</button>
+            </div>
+
+            <!-- 로그인 -->
+            <div id="paneLogin">
+                <h2>사원 로그인</h2>
+                <p class="mini">ID와 비밀번호를 입력하세요.</p>
+                <form id="empLoginForm">
+                    <label>ID <input id="loginId" autocomplete="username" required></label>
+                    <label>비밀번호 <input id="loginPw" type="password" autocomplete="current-password" required></label>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary">로그인</button>
+                        <button type="button" id="empLoginCancel" class="btn">취소</button>
+                    </div>
+                    <p id="empLoginError" class="error-message hidden"></p>
+                </form>
+            </div>
+
+            <!-- 회원가입 -->
+            <div id="paneRegister" class="hidden">
+                <h2>사원 회원가입</h2>
+                <p class="mini">관리자 승인 후 사용 가능합니다.</p>
+                <form id="empRegisterForm">
+                    <label>ID <input id="regId" autocomplete="username" required></label>
+                    <label>비밀번호 <input id="regPw" type="password" autocomplete="new-password" required></label>
+                    <label>이름 <input id="regName" required></label>
+                    <label>부서
+                        <select id="regDept" required>
+                            <option value="">-- 선택 --</option>
+                            <option>생산부</option><option>품질관리부</option><option>영업부</option>
+                            <option>관리부</option><option>연구개발부</option><option>물류부</option>
+                        </select>
+                    </label>
+                    <label>이메일(선택) <input id="regEmail" type="email" placeholder="example@sepnp.com"></label>
+                    <div class="form-actions">
+                        <button type="submit" class="btn primary">가입신청</button>
+                        <button type="button" id="empRegisterCancel" class="btn">취소</button>
+                    </div>
+                    <p id="empRegisterError" class="error-message hidden"></p>
+                </form>
+            </div>
         </div>
     </div>
 
+    <script src="assets/auth.js"></script>
     <script>
-        // 세션 체크: 이미 로그인되어 있다면 employee.html로 리다이렉트
+        // 이미 로그인되어 있으면 바로 내부 포털로
         if (sessionStorage.getItem('sepnp_emp_no')) {
             window.location.href = 'employee.html';
         }
 
-        const REGISTERED_EMPLOYEES = ['123','234','345','678']; // 실제 사번으로 교체
         const btnEmployee = document.getElementById('btnEmployee');
         const overlay = document.getElementById('empLoginOverlay');
-        const form = document.getElementById('empLoginForm');
-        const input = document.getElementById('empLoginNo');
-        const cancel = document.getElementById('empLoginCancel');
-        const err = document.getElementById('empLoginError');
+        const errLogin = document.getElementById('empLoginError');
+        const errReg = document.getElementById('empRegisterError');
+
+        // 탭
+        const tabLogin = document.getElementById('tabLogin');
+        const tabRegister = document.getElementById('tabRegister');
+        const paneLogin = document.getElementById('paneLogin');
+        const paneRegister = document.getElementById('paneRegister');
+
+        function showLogin(){
+            tabLogin.classList.add('active'); tabRegister.classList.remove('active');
+            paneLogin.classList.remove('hidden'); paneRegister.classList.add('hidden');
+        }
+        function showRegister(){
+            tabRegister.classList.add('active'); tabLogin.classList.remove('active');
+            paneRegister.classList.remove('hidden'); paneLogin.classList.add('hidden');
+        }
+        tabLogin.onclick = showLogin;
+        tabRegister.onclick = showRegister;
 
         btnEmployee.addEventListener('click', () => {
             overlay.classList.remove('hidden');
-            input.value = '';
-            err.classList.add('hidden');
-            input.focus();
+            showLogin();
+            errLogin.classList.add('hidden');
+            errReg.classList.add('hidden');
+            document.getElementById('loginId').focus();
         });
 
-        cancel.addEventListener('click', () => {
-            overlay.classList.add('hidden');
-        });
+        // 닫기
+        document.getElementById('empLoginCancel').onclick = () => overlay.classList.add('hidden');
+        document.getElementById('empRegisterCancel').onclick = () => overlay.classList.add('hidden');
+        overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.add('hidden'); });
 
-        form.addEventListener('submit', e => {
+        // 로그인 처리
+        document.getElementById('empLoginForm').addEventListener('submit', async (e)=>{
             e.preventDefault();
-            const val = input.value.trim();
-            
-            if (!/^\d{3,6}$/.test(val)) {
-                err.textContent = '사원번호는 숫자 3~6자리여야 합니다.';
-                err.classList.remove('hidden');
+            errLogin.classList.add('hidden');
+            const id = document.getElementById('loginId').value.trim();
+            const pw = document.getElementById('loginPw').value;
+            const res = await Auth.signIn(id, pw);
+            if(!res.ok){
+                errLogin.textContent = res.msg || '로그인 실패';
+                errLogin.classList.remove('hidden');
                 return;
             }
-            
-            if (!REGISTERED_EMPLOYEES.includes(val)) {
-                err.textContent = '등록되지 않은 사원번호입니다.';
-                err.classList.remove('hidden');
-                return;
-            }
-
-            sessionStorage.setItem('sepnp_emp_no', val);
             window.location.href = 'employee.html';
         });
 
-        // 오버레이 바깥 클릭시 닫기
-        overlay.addEventListener('click', (ev) => {
-            if (ev.target === overlay) {
-                overlay.classList.add('hidden');
+        // 회원가입 처리
+        document.getElementById('empRegisterForm').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            errReg.classList.add('hidden');
+
+            const data = {
+                username: document.getElementById('regId').value.trim(),
+                password: document.getElementById('regPw').value,
+                name: document.getElementById('regName').value.trim(),
+                dept: document.getElementById('regDept').value,
+                email: document.getElementById('regEmail').value.trim()
+            };
+
+            // 간단한 유효성
+            if(data.username.length < 3){
+                errReg.textContent = 'ID는 3자 이상이어야 합니다.'; errReg.classList.remove('hidden'); return;
             }
+            if(data.password.length < 4){
+                errReg.textContent = '비밀번호는 4자 이상이어야 합니다.'; errReg.classList.remove('hidden'); return;
+            }
+            if(!data.dept){
+                errReg.textContent = '부서를 선택하세요.'; errReg.classList.remove('hidden'); return;
+            }
+
+            const res = await Auth.registerPending(data);
+            if(!res.ok){
+                errReg.textContent = res.msg || '가입신청 실패'; errReg.classList.remove('hidden'); return;
+            }
+
+            alert('가입신청이 접수되었습니다. 관리자 승인 후 로그인 가능합니다.');
+            showLogin();
         });
     </script>
 </body>
