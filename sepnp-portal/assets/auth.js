@@ -22,33 +22,60 @@
 
   async function ensureDefaultAdmin(){
     const emps = load(KEY_EMPLOYEES);
-    const has = emps.some(e => e.username === 'sepnp' || e.empNo === 'ADMIN');
-    if (has) return;
-    const passwordHash = await sha256('0536');
-    emps.push({
-      id: 'emp_admin',
-      empNo: 'ADMIN',
-      username: 'sepnp',
-      passwordHash,
-      name: '관리자',
-      dept: '관리부',
-      position: '관리자',
-      phone: '',
-      email: '',
-      joinDate: new Date().toISOString().slice(0,10),
-      status: 'active',
-      role: 'admin',
-      perms: ['*'],
-      createdAt: new Date().toISOString()
-    });
-    save(KEY_EMPLOYEES, emps);
+    let changed = false;
+
+    // 기본 관리자 1: sepnp / 0536
+    if (!emps.some(e => e.username === 'sepnp' || e.empNo === 'ADMIN')) {
+      const passwordHash = await sha256('0536');
+      emps.push({
+        id: 'emp_admin',
+        empNo: 'ADMIN',
+        username: 'sepnp',
+        passwordHash,
+        name: '관리자',
+        dept: '관리부',
+        position: '관리자',
+        phone: '',
+        email: '',
+        joinDate: new Date().toISOString().slice(0,10),
+        status: 'active',
+        role: 'admin',
+        perms: ['*'],
+        createdAt: new Date().toISOString()
+      });
+      changed = true;
+    }
+
+    // 기본 관리자 2: test / 123
+    if (!emps.some(e => e.username === 'test' || e.empNo === 'ADMIN2')) {
+      const passwordHash2 = await sha256('123');
+      emps.push({
+        id: 'emp_admin2',
+        empNo: 'ADMIN2',
+        username: 'test',
+        passwordHash: passwordHash2,
+        name: '관리자2',
+        dept: '관리부',
+        position: '관리자',
+        phone: '',
+        email: '',
+        joinDate: new Date().toISOString().slice(0,10),
+        status: 'active',
+        role: 'admin',
+        perms: ['*'],
+        createdAt: new Date().toISOString()
+      });
+      changed = true;
+    }
+
+    if (changed) save(KEY_EMPLOYEES, emps);
   }
 
   async function signIn(loginId, password){
     if(!loginId || !password) return { ok:false, msg:'ID와 비밀번호를 입력하세요.' };
 
-    // 기본 관리자 보장 (최초 로드 시점 혹은 로그인 직전)
-    if (loginId === 'sepnp' && !findEmployeeByLoginId('sepnp')) {
+    // 기본 관리자 보장
+    if ((loginId === 'sepnp' || loginId === 'test') && !findEmployeeByLoginId(loginId)) {
       await ensureDefaultAdmin();
     }
 
@@ -110,7 +137,7 @@
     save(KEY_EMPLOYEES, emps);
   }
 
-  // 초기 로드시 기본 관리자 생성 시도
+  // 초기 로드시 기본 관리자 1/2 생성 시도
   ensureDefaultAdmin().catch(console.error);
 
   window.Auth = {
