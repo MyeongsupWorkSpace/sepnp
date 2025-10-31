@@ -117,6 +117,31 @@
             .tagline {
                 font-size: 20px;
             }
+
+            /* 버튼이 항상 보이도록 하단 고정 */
+            .buttons {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 16px;
+                padding: 10px 12px;
+                gap: 10px;
+                z-index: 100;
+                justify-content: center;
+                background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.96) 30%, rgba(255,255,255,1) 100%);
+            }
+
+            /* 이미지 높이 축소로 위 영역 확보 */
+            .hero-img {
+                height: 45vh;
+                max-height: 45vh;
+                object-fit: cover;
+            }
+
+            /* 고정 버튼과 겹치지 않도록 여백 */
+            .hero-text {
+                padding-bottom: 90px;
+            }
         }
 
         /* 모달 오버레이 */
