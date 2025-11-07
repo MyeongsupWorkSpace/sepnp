@@ -3,12 +3,9 @@
   const hostname = window.location.hostname;
   const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
   
-  const API_BASE = isProduction 
-    ? window.location.origin + '/api'  // Railway: https://sepnp-production.up.railway.app/api
-    : 'http://localhost:3000/api';     // 로컬: http://localhost:3000/api
-  
-  console.log('🔧 API 서버:', API_BASE);
-  console.log('🌍 환경:', isProduction ? 'Production (Railway)' : 'Development (Local)');
+  // 배포/로컬 모두 동작: 현재 도메인 기준으로 API 사용
+  const API_BASE = `${window.location.origin}/api`;
+  console.log('API BASE =', API_BASE);
   
   window.USE_MYSQL = true;
 
