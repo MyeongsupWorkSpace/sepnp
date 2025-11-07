@@ -1,12 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const crypto = require('crypto');
-
-// SHA256 해시
-function sha256(text) {
-  return crypto.createHash('sha256').update(text).digest('hex');
-}
 
 // 로그인
 router.post('/login', async (req, res) => {

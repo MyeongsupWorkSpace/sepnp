@@ -148,18 +148,18 @@
 (() => {
   'use strict';
 
-  // 도메인 기준 API Base (배포: https://도메인/api, 로컬: http://localhost:3000/api)
+  // 배포/로컬 자동 감지
   const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
   const API_BASE = isLocal ? 'http://localhost:3000/api' : `${location.origin}/api`;
 
-  // 전역 노출(기존에 있으면 유지)
-  if (!window.API_BASE) window.API_BASE = API_BASE;
+  // 전역 노출
+  window.API_BASE = API_BASE;
 
-  // fetch 공통 요청(타임아웃 포함)
+  // fetch 공통 요청 (타임아웃 포함)
   async function request(path, options = {}) {
     const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
     const controller = new AbortController();
-    const timeout = options.timeout ?? 12000;
+    const timeout = options.timeout ?? 15000;
     const timer = setTimeout(() => controller.abort(), timeout);
 
     try {
@@ -169,7 +169,6 @@
         ...options,
       });
 
-      // 204 같은 비본문 응답 처리
       if (resp.status === 204) return null;
 
       const isJson = (resp.headers.get('content-type') || '').includes('application/json');
@@ -185,7 +184,7 @@
     }
   }
 
-  // 간단 HTTP 메서드 래퍼
+  // HTTP 메서드 래퍼
   const HTTP = {
     get: (p, opt) => request(p, { method: 'GET', ...(opt || {}) }),
     post: (p, body, opt) => request(p, { method: 'POST', body: JSON.stringify(body), ...(opt || {}) }),
@@ -194,14 +193,8 @@
     delete: (p, opt) => request(p, { method: 'DELETE', ...(opt || {}) }),
   };
 
-  // 기존 window.API가 있으면 보조 기능만 주입(덮어쓰지 않음)
-  window.API = window.API || {};
-  if (!window.API.request) window.API.request = request;
-  if (!window.API.HTTP) window.API.HTTP = HTTP;
+  window.API = { request, HTTP };
 
-  // 디버그 최소화
-  if (!window.__API_DEBUG_SHOWN__) {
-    console.log('[API] base =', API_BASE);
-    window.__API_DEBUG_SHOWN__ = true;
-  }
+  console.log('🔧 API 베이스:', API_BASE);
+  console.log('🌍 환경:', isLocal ? 'Local' : 'Production');
 })();

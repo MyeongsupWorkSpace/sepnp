@@ -1,9 +1,7 @@
 {
   "name": "sepnp-server",
   "version": "1.0.0",
-  "description": "SEPNP 통합 서버",
   "main": "server.js",
-  "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
