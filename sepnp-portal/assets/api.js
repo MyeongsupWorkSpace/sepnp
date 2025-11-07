@@ -5,7 +5,7 @@
   
   // 배포/로컬 모두 동작: 현재 도메인 기준으로 API 사용
   const API_BASE = `${window.location.origin}/api`;
-  console.log('API BASE =', API_BASE);
+  console.log('API BASE:', API_BASE);
   
   window.USE_MYSQL = true;
 

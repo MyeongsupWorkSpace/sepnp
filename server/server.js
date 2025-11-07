@@ -5,18 +5,15 @@ const path = require('path');
 require('dotenv').config();
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // 미들웨어
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// 1) 프론트 정적 파일 서빙 (API 라우트 등록보다 먼저!)
-const publicDir = path.resolve(__dirname, '../sepnp-portal');
-app.use(express.static(publicDir, {
-  maxAge: '1h',
-  extensions: ['html']
-}));
+// 정적 서빙
+app.use(express.static(path.resolve(__dirname, '../sepnp-portal')));
 
 // DB 연결
 const db = require('./db');
@@ -28,22 +25,20 @@ const productRoutes = require('./routes/products');
 const customerRoutes = require('./routes/customers');
 const orderRoutes = require('./routes/orders');
 
-// 2) API 라우트 (이미 있는 부분)
+// API 라우트들
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/orders', orderRoutes);
 
-// 2) 루트와 개별 html 라우트
-app.get('/', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
-});
-
-app.get('/*.html', (req, res, next) => {
-  const file = path.join(publicDir, req.path);
-  res.sendFile(file, err => err ? next() : undefined);
-});
+// 루트/HTML 라우트
+app.get('/', (_req, res) =>
+  res.sendFile(path.resolve(__dirname, '../sepnp-portal/index.html'))
+);
+app.get('/*.html', (req, res) =>
+  res.sendFile(path.resolve(__dirname, '../sepnp-portal', req.path))
+);
 
 // 헬스체크
 app.get('/api/health', (req, res) => {
@@ -74,9 +69,10 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// 3) 마지막 404는 맨 끝
+// 마지막 404
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
-// 4) Railway는 0.0.0.0 바인딩
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server listening on ${PORT}`));
+// 0.0.0.0에 바인딩(중요)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server listening on ${PORT}`);
+});
