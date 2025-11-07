@@ -41,3 +41,17 @@
     buildHeader();
   }
 })();
+
+/* ===== 네비게이션 보조(비파괴 추가) ===== */
+(() => {
+  try {
+    const here = location.pathname.split('/').pop() || 'index.html';
+    const links = document.querySelectorAll('nav a, .nav a, header a');
+    links.forEach(a => {
+      const href = (a.getAttribute('href') || '').split('/').pop();
+      if (href && href === here) a.classList.add('active');
+    });
+  } catch (e) {
+    // no-op
+  }
+})();

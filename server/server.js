@@ -2,17 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
-require('dotenv').config();
-
-const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 미들웨어
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// 정적 서빙
+// 프론트 정적 파일
 app.use(express.static(path.resolve(__dirname, '../sepnp-portal')));
 
 // DB 연결
@@ -32,7 +24,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/orders', orderRoutes);
 
-// 루트/HTML 라우트
+// 루트/HTML
 app.get('/', (_req, res) =>
   res.sendFile(path.resolve(__dirname, '../sepnp-portal/index.html'))
 );
@@ -73,6 +65,4 @@ app.get('/api/stats', async (req, res) => {
 app.use((req, res) => res.status(404).json({ error: 'Not Found' }));
 
 // 0.0.0.0에 바인딩(중요)
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server listening on ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`✅ Server on ${PORT}`));
