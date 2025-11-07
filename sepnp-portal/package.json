@@ -1,8 +1,0 @@
-{
-  "name": "sepnp-portal",
-  "version": "1.0.0",
-  "description": "SEPNP 생산관리 포털",
-  "scripts": {
-    "build": "echo 'No build needed - static files'"
-  }
-}
