@@ -1,8 +1,16 @@
 (function(){
-  const API_BASE = 'http://localhost:3000/api';
+  // Railway 배포 시 자동으로 같은 도메인 사용
+  const hostname = window.location.hostname;
+  const isProduction = hostname !== 'localhost' && hostname !== '127.0.0.1';
   
-  // MySQL 사용 여부 (전역 설정)
-  window.USE_MYSQL = true; // false로 변경하면 localStorage 사용
+  const API_BASE = isProduction 
+    ? window.location.origin + '/api'  // Railway: https://sepnp-production.up.railway.app/api
+    : 'http://localhost:3000/api';     // 로컬: http://localhost:3000/api
+  
+  console.log('🔧 API 서버:', API_BASE);
+  console.log('🌍 환경:', isProduction ? 'Production (Railway)' : 'Development (Local)');
+  
+  window.USE_MYSQL = true;
 
   async function request(endpoint, options = {}) {
     if (!window.USE_MYSQL) {
@@ -136,5 +144,5 @@
     getStats: () => request('/stats')
   };
 
-  console.log(`✅ API 모듈 로드 완료 (MySQL 모드: ${window.USE_MYSQL ? 'ON' : 'OFF'})`);
+  console.log('✅ API 모듈 로드 완료');
 })();
