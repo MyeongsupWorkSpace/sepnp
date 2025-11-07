@@ -1,378 +1,454 @@
 <!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>SEPNP - 홈</title>
-    <link rel="stylesheet" href="styles.css" />
-    <style>
-        /* 기본 레이아웃 */
-        body.landing-page {
-            margin: 0;
-            min-height: 100vh;
-            background: #f7f3f4;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
-
-        /* 히어로 섹션 */
-        .hero-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            box-sizing: border-box;
-        }
-
-        .hero {
-            position: relative;
-            width: 100%;
-            max-width: 1400px;
-            background: #fff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        }
-
-        .hero-img {
-            width: 100%;
-            height: auto;
-            display: block;
-            object-fit: cover;
-            max-height: 600px;
-        }
-
-        .hero-text {
-            padding: 50px 40px;
-            text-align: center;
-        }
-
-        .hero-text h1 {
-            margin: 0 0 16px;
-            font-size: 42px;
-            font-weight: 700;
-            color: #111;
-        }
-
-        .tagline {
-            font-size: 24px;
-            color: #333;
-            margin: 0 0 8px;
-        }
-
-        .short {
-            font-size: 16px;
-            color: #666;
-            margin: 0 0 24px;
-        }
-
-        .buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        /* 버튼 스타일 */
-        .btn {
-            padding: 12px 24px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: #fff;
-            color: #333;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background: #f8f9fa;
-        }
-
-        .btn.primary {
-            background: #0078d4;
-            border-color: #0078d4;
-            color: white;
-        }
-
-        .btn.primary:hover {
-            background: #006abe;
-        }
-
-        /* 탭 */
-        .tabs{display:flex;gap:8px;margin-bottom:12px}
-        .tab{flex:1;text-align:center;padding:10px;border:1px solid #ddd;border-radius:8px;cursor:pointer;background:#f8f9fa}
-        .tab.active{background:#fff;border-color:#0078d4;color:#0078d4;font-weight:700}
-        .hidden{display:none}
-
-        /* 반응형 */
-        @media (max-width: 768px) {
-            .hero-text {
-                padding: 30px 20px;
-            }
-            .hero-text h1 {
-                font-size: 32px;
-            }
-            .tagline {
-                font-size: 20px;
-            }
-
-            /* 버튼이 항상 보이도록 하단 고정 */
-            .buttons {
-                position: fixed;
-                left: 0;
-                right: 0;
-                bottom: 16px;
-                padding: 10px 12px;
-                gap: 10px;
-                z-index: 100;
-                justify-content: center;
-                background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.96) 30%, rgba(255,255,255,1) 100%);
-            }
-
-            /* 이미지 높이 축소로 위 영역 확보 */
-            .hero-img {
-                height: 45vh;
-                max-height: 45vh;
-                object-fit: cover;
-            }
-
-            /* 고정 버튼과 겹치지 않도록 여백 */
-            .hero-text {
-                padding-bottom: 90px;
-            }
-        }
-
-        /* 모달 오버레이 */
-        .overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 1;
-            visibility: visible;
-            transition: all 0.2s;
-            z-index: 1000;
-        }
-
-        .overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        /* 로그인 카드 */
-        .login-card {
-            background: white;
-            padding: 32px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        }
-
-        .login-card h2 {
-            margin: 0 0 16px;
-            font-size: 24px;
-        }
-
-        .login-card .mini {
-            color: #666;
-            margin-bottom: 16px;
-        }
-
-        .login-card label {
-            display: block;
-            margin-bottom: 16px;
-        }
-
-        .login-card input {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            margin-top: 4px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-        }
-
-        .error-message {
-            color: #dc3545;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-
-        .error-message.hidden {
-            display: none;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SEPNP 포털 로그인</title>
+  <style>
+    :root {
+      --primary: #667eea;
+      --primary-dark: #5568d3;
+      --bg: #f5f6f8;
+      --card: #fff;
+      --border: #e5e7eb;
+      --text: #111827;
+      --text-muted: #6b7280;
+      --error: #ef4444;
+      --success: #10b981;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 420px;
+    }
+    
+    .login-card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .logo-icon {
+      font-size: 48px;
+      margin-bottom: 8px;
+    }
+    
+    .logo-text {
+      font-size: 28px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .logo-subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    
+    .form-control {
+      width: 100%;
+      height: 48px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 0 16px;
+      font-size: 15px;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .btn {
+      width: 100%;
+      height: 48px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 24px;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+    }
+    
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: none;
+      animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .alert.show {
+      display: block;
+    }
+    
+    .alert-error {
+      background: #fee;
+      color: var(--error);
+      border: 1px solid #fcc;
+    }
+    
+    .alert-success {
+      background: #efe;
+      color: var(--success);
+      border: 1px solid #cfc;
+    }
+    
+    .links {
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .links a {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .links a:hover {
+      text-decoration: underline;
+    }
+    
+    .test-accounts {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .test-accounts h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+    
+    .test-accounts code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      color: var(--primary);
+    }
+    
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 20px 0;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .divider span {
+      padding: 0 10px;
+    }
+  </style>
 </head>
 <body class="landing-page">
-    <!-- 메인 랜딩 화면 -->
-    <main class="hero-container">
-        <div class="hero">
-            <img src="image/officeview.jpg" alt="회사 전경" class="hero-img">
-            <div class="hero-text">
-                <h1>SEPNP</h1>
-                <p class="tagline">품질과 신뢰로 만드는 패키징</p>
-                <p class="short">고객과 사원을 위한 맞춤형 포털로 이동하세요.</p>
-                <div class="buttons">
-                    <a class="btn" href="https://www.sepnp.com" target="_blank" rel="noopener">고객용</a>
-                    <button id="btnEmployee" class="btn primary">사원용</button>
-                </div>
-            </div>
+  <div class="login-container">
+    <div class="login-card">
+      <div class="logo">
+        <div class="logo-icon">🏢</div>
+        <div class="logo-text">SEPNP</div>
+        <div class="logo-subtitle">생산 관리 시스템</div>
+      </div>
+
+      <div id="loginAlert" class="alert"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="loginId">아이디 또는 사번</label>
+          <input 
+            type="text" 
+            id="loginId" 
+            class="form-control" 
+            placeholder="sepnp 또는 ADMIN"
+            autocomplete="username" 
+            required
+          >
         </div>
-    </main>
-
-    <!-- 사원 로그인/회원가입 모달 -->
-    <div id="empLoginOverlay" class="overlay hidden" aria-hidden="true">
-        <div class="login-card" role="dialog" aria-modal="true">
-            <div class="tabs">
-                <button id="tabLogin" class="tab active" type="button">로그인</button>
-                <button id="tabRegister" class="tab" type="button">회원가입</button>
-            </div>
-
-            <!-- 로그인 -->
-            <div id="paneLogin">
-                <h2>사원 로그인</h2>
-                <p class="mini">ID와 비밀번호를 입력하세요.</p>
-                <form id="empLoginForm">
-                    <label>ID <input id="loginId" autocomplete="username" required></label>
-                    <label>비밀번호 <input id="loginPw" type="password" autocomplete="current-password" required></label>
-                    <div class="form-actions">
-                        <button type="submit" class="btn primary">로그인</button>
-                        <button type="button" id="empLoginCancel" class="btn">취소</button>
-                    </div>
-                    <p id="empLoginError" class="error-message hidden"></p>
-                </form>
-            </div>
-
-            <!-- 회원가입 -->
-            <div id="paneRegister" class="hidden">
-                <h2>사원 회원가입</h2>
-                <p class="mini">관리자 승인 후 사용 가능합니다.</p>
-                <form id="empRegisterForm">
-                    <label>ID <input id="regId" autocomplete="username" required></label>
-                    <label>비밀번호 <input id="regPw" type="password" autocomplete="new-password" required></label>
-                    <label>이름 <input id="regName" required></label>
-                    <label>부서
-                        <select id="regDept" required>
-                            <option value="">-- 선택 --</option>
-                            <option>생산부</option><option>품질관리부</option><option>영업부</option>
-                            <option>관리부</option><option>연구개발부</option><option>물류부</option>
-                        </select>
-                    </label>
-                    <label>이메일(선택) <input id="regEmail" type="email" placeholder="example@sepnp.com"></label>
-                    <div class="form-actions">
-                        <button type="submit" class="btn primary">가입신청</button>
-                        <button type="button" id="empRegisterCancel" class="btn">취소</button>
-                    </div>
-                    <p id="empRegisterError" class="error-message hidden"></p>
-                </form>
-            </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">비밀번호</label>
+          <input 
+            type="password" 
+            id="loginPassword" 
+            class="form-control" 
+            placeholder="비밀번호를 입력하세요"
+            autocomplete="current-password" 
+            required
+          >
         </div>
+
+        <button type="submit" class="btn" id="loginBtn">
+          로그인
+        </button>
+      </form>
+
+      <div class="divider">
+        <span>또는</span>
+      </div>
+
+      <div class="links">
+        <a href="register.html">회원가입</a>
+      </div>
+
+      <div class="test-accounts">
+        <h4>💡 테스트 계정</h4>
+        <div style="line-height:1.6">
+          관리자: <code>sepnp / 0536</code> 또는 <code>test / 123</code><br>
+          인쇄: <code>print / 1234</code><br>
+          톰슨: <code>thomson / 1234</code><br>
+          코팅: <code>coating / 1234</code><br>
+          접착: <code>adhesive / 1234</code><br>
+          합지: <code>lamination / 1234</code>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script src="assets/auth.js"></script>
-    <script>
-        // 이미 로그인되어 있으면 바로 내부 포털로
-        if (sessionStorage.getItem('sepnp_emp_no')) {
+  <!-- API 모듈 먼저 로드 -->
+  <script src="assets/api.js"></script>
+  <script src="assets/auth.js"></script>
+  
+  <script>
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginAlert = document.getElementById('loginAlert');
+    const loginIdInput = document.getElementById('loginId');
+    const loginPasswordInput = document.getElementById('loginPassword');
+
+    function showAlert(message, type = 'error') {
+      loginAlert.textContent = message;
+      loginAlert.className = `alert alert-${type} show`;
+      
+      setTimeout(() => {
+        loginAlert.classList.remove('show');
+      }, 4000);
+    }
+
+    // MySQL 로그인
+    async function loginWithMySQL(loginId, password) {
+      try {
+        const result = await API.login(loginId, password);
+        
+        if (result.ok) {
+          sessionStorage.setItem('sepnp_emp_no', result.emp.empNo);
+          sessionStorage.setItem('sepnp_emp_name', result.emp.name);
+          sessionStorage.setItem('sepnp_emp_role', result.emp.role);
+          sessionStorage.setItem('sepnp_emp_username', result.emp.username);
+          
+          if (result.emp.perms) {
+            sessionStorage.setItem('sepnp_emp_perms', JSON.stringify(result.emp.perms));
+          }
+          
+          showAlert('로그인 성공! (MySQL)', 'success');
+          
+          setTimeout(() => {
             window.location.href = 'employee.html';
+          }, 500);
+          
+          return true;
         }
+      } catch (error) {
+        console.error('MySQL 로그인 오류:', error);
+        return false;
+      }
+    }
 
-        const btnEmployee = document.getElementById('btnEmployee');
-        const overlay = document.getElementById('empLoginOverlay');
-        const errLogin = document.getElementById('empLoginError');
-        const errReg = document.getElementById('empRegisterError');
-
-        // 탭
-        const tabLogin = document.getElementById('tabLogin');
-        const tabRegister = document.getElementById('tabRegister');
-        const paneLogin = document.getElementById('paneLogin');
-        const paneRegister = document.getElementById('paneRegister');
-
-        function showLogin(){
-            tabLogin.classList.add('active'); tabRegister.classList.remove('active');
-            paneLogin.classList.remove('hidden'); paneRegister.classList.add('hidden');
-        }
-        function showRegister(){
-            tabRegister.classList.add('active'); tabLogin.classList.remove('active');
-            paneRegister.classList.remove('hidden'); paneLogin.classList.add('hidden');
-        }
-        tabLogin.onclick = showLogin;
-        tabRegister.onclick = showRegister;
-
-        btnEmployee.addEventListener('click', () => {
-            overlay.classList.remove('hidden');
-            showLogin();
-            errLogin.classList.add('hidden');
-            errReg.classList.add('hidden');
-            document.getElementById('loginId').focus();
-        });
-
-        // 닫기
-        document.getElementById('empLoginCancel').onclick = () => overlay.classList.add('hidden');
-        document.getElementById('empRegisterCancel').onclick = () => overlay.classList.add('hidden');
-        overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.add('hidden'); });
-
-        // 로그인 처리
-        document.getElementById('empLoginForm').addEventListener('submit', async (e)=>{
-            e.preventDefault();
-            errLogin.classList.add('hidden');
-            const id = document.getElementById('loginId').value.trim();
-            const pw = document.getElementById('loginPw').value;
-            const res = await Auth.signIn(id, pw);
-            if(!res.ok){
-                errLogin.textContent = res.msg || '로그인 실패';
-                errLogin.classList.remove('hidden');
-                return;
-            }
+    // localStorage 로그인 (폴백)
+    async function loginWithLocalStorage(loginId, password) {
+      try {
+        const result = await Auth.signIn(loginId, password);
+        
+        if (result.ok) {
+          showAlert('로그인 성공! (로컬)', 'success');
+          
+          setTimeout(() => {
             window.location.href = 'employee.html';
+          }, 500);
+          
+          return true;
+        } else {
+          showAlert(result.msg || '로그인 실패', 'error');
+          return false;
+        }
+      } catch (error) {
+        console.error('로컬 로그인 오류:', error);
+        return false;
+      }
+    }
+
+    // 로그인 폼 제출
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const loginId = loginIdInput.value.trim();
+      const password = loginPasswordInput.value;
+      
+      if (!loginId || !password) {
+        showAlert('ID와 비밀번호를 입력하세요.', 'error');
+        return;
+      }
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = window.USE_MYSQL ? 'MySQL 로그인 중...' : '로그인 중...';
+
+      let success = false;
+
+      if (window.USE_MYSQL) {
+        success = await loginWithMySQL(loginId, password);
+        
+        if (!success) {
+          console.log('MySQL 실패, localStorage로 재시도...');
+          success = await loginWithLocalStorage(loginId, password);
+        }
+      } else {
+        success = await loginWithLocalStorage(loginId, password);
+      }
+
+      if (!success) {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '로그인';
+      }
+    });
+
+    // Enter 키 처리
+    loginPasswordInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        loginForm.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // 페이지 로드 시
+    window.addEventListener('DOMContentLoaded', () => {
+      loginIdInput.focus();
+      
+      // 이미 로그인되어 있으면 리디렉션
+      const empNo = sessionStorage.getItem('sepnp_emp_no');
+      if (empNo) {
+        window.location.href = 'employee.html';
+      }
+
+      // 모드 표시
+      console.log(`🔧 로그인 모드: ${USE_MYSQL ? 'MySQL' : 'localStorage'}`);
+    });
+
+    // 디버그 모드 (Ctrl + Shift + D)
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        console.log('=== 디버그 정보 ===');
+        console.log('모드:', USE_MYSQL ? 'MySQL' : 'localStorage');
+        console.log('API 서버:', 'http://localhost:3000');
+        console.log('세션:', {
+          empNo: sessionStorage.getItem('sepnp_emp_no'),
+          empName: sessionStorage.getItem('sepnp_emp_name'),
+          empRole: sessionStorage.getItem('sepnp_emp_role')
         });
-
-        // 회원가입 처리
-        document.getElementById('empRegisterForm').addEventListener('submit', async (e)=>{
-            e.preventDefault();
-            errReg.classList.add('hidden');
-
-            const data = {
-                username: document.getElementById('regId').value.trim(),
-                password: document.getElementById('regPw').value,
-                name: document.getElementById('regName').value.trim(),
-                dept: document.getElementById('regDept').value,
-                email: document.getElementById('regEmail').value.trim()
-            };
-
-            // 간단한 유효성
-            if(data.username.length < 3){
-                errReg.textContent = 'ID는 3자 이상이어야 합니다.'; errReg.classList.remove('hidden'); return;
-            }
-            if(data.password.length < 4){
-                errReg.textContent = '비밀번호는 4자 이상이어야 합니다.'; errReg.classList.remove('hidden'); return;
-            }
-            if(!data.dept){
-                errReg.textContent = '부서를 선택하세요.'; errReg.classList.remove('hidden'); return;
-            }
-
-            const res = await Auth.registerPending(data);
-            if(!res.ok){
-                errReg.textContent = res.msg || '가입신청 실패'; errReg.classList.remove('hidden'); return;
-            }
-
-            alert('가입신청이 접수되었습니다. 관리자 승인 후 로그인 가능합니다.');
-            showLogin();
-        });
-    </script>
+        
+        if (confirm('관리자 계정으로 자동 로그인하시겠습니까?')) {
+          loginIdInput.value = 'sepnp';
+          loginPasswordInput.value = '0536';
+          loginForm.dispatchEvent(new Event('submit'));
+        }
+      }
+    });
+  </script>
 </body>
 </html>

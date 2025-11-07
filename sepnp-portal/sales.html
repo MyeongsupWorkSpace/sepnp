@@ -440,7 +440,7 @@
         ctx.font = '11px sans-serif';
         ctx.textAlign = labelX > centerX ? 'left' : 'right';
         ctx.fillText(`${name}`, labelX, labelY);
-        ctx.fillText={`${((qty/total)*100).toFixed(1)}%`, labelX, labelY + 12);
+        ctx.fillText(`${((qty/total)*100).toFixed(1)}%`, labelX, labelY + 12);
 
         startAngle += sliceAngle;
       });
@@ -663,7 +663,10 @@
       
       // 탭 버튼 활성화
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
+      const clickedTab = Array.from(document.querySelectorAll('.tab')).find(t => 
+        t.textContent.includes(tab === 'chart' ? '차트' : tab === 'table' ? '상세' : tab === 'product' ? '제품별' : '거래처별')
+      );
+      if(clickedTab) clickedTab.classList.add('active');
       
       // 탭 컨텐츠 표시
       document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');

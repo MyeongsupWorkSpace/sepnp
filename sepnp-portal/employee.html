@@ -152,23 +152,110 @@
       color: #f59e0b;
     }
     
-    @media (max-width: 768px) {
-      .welcome {
-        padding: 32px 24px;
-      }
-      
-      .welcome h1 {
-        font-size: 24px;
-      }
-      
-      .card-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+    /* 작업자 편성 모달 */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+    .modal.show{display:flex}
+    .modal-card{background:#fff;border-radius:12px;width:min(980px,95%);max-height:90vh;overflow:auto;padding:18px 18px 12px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+    .modal-title{margin:0 0 12px;font-size:18px;font-weight:800;color:#667eea}
+    .grid{display:grid;grid-template-columns: 1.2fr 1fr; gap:16px}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    .inp,.sel{height:36px;border:1px solid #e5e7eb;border-radius:8px;padding:0 10px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .card{border:1px solid #e5e7eb;border-radius:10px;padding:12px;background:#fafbfc}
+    .tbl-wrap{border:1px solid #e5e7eb;border-radius:10px;overflow:auto}
+    table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+    th,td{padding:8px;border-bottom:1px solid #f1f3f5;text-align:center;white-space:nowrap}
+    thead{background:#f8f9fa;position:sticky;top:0}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+    .btn{height:34px;padding:0 12px;border:1px solid #e5e7eb;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;font-size:13px}
+    .btn.primary{background:#667eea;border-color:#667eea;color:#fff}
+    .btn.danger{background:#ef4444;border-color:#ef4444;color:#fff}
+    .tag{display:inline-block;padding:4px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:12px;margin:2px;background:#fafafa}
+    @media(max-width:900px){ .grid{grid-template-columns:1fr} }
   </style>
 </head>
 <body>
   <header class="fixed-header"></header>
+
+  <!-- 작업자 편성 모달 -->
+  <div id="assignModal" class="modal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="assignModalTitle">작업자 편성</h3>
+      <div class="grid">
+        <!-- 좌측: 기본 정보 -->
+        <div class="card">
+          <div class="field">
+            <label><strong>공정</strong></label>
+            <input id="asProcess" class="inp" readonly style="background:#f9fafb;font-weight:700">
+          </div>
+          <div class="field">
+            <label>호기 *</label>
+            <select id="asMachine" class="sel" required></select>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:1;min-width:180px">
+              <label>작업일 *</label>
+              <input id="asDate" type="date" class="inp" required>
+            </div>
+            <div class="field" style="flex:1;min-width:140px">
+              <label>작업조 *</label>
+              <div class="row">
+                <label><input type="radio" name="asTeam" value="A" checked> A조</label>
+                <label><input type="radio" name="asTeam" value="B"> B조</label>
+              </div>
+            </div>
+            <div class="field" style="flex:1;min-width:140px">
+              <label>근무 *</label>
+              <div class="row">
+                <label><input type="radio" name="asShift" value="주간" checked> 주간</label>
+                <label><input type="radio" name="asShift" value="야간"> 야간</label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field" style="flex:1;min-width:150px">
+              <label>시작시간</label>
+              <input id="asStart" type="time" class="inp">
+            </div>
+            <div class="field" style="flex:1;min-width:150px">
+              <label>종료시간</label>
+              <input id="asEnd" type="time" class="inp">
+            </div>
+            <div class="field" style="min-width:150px">
+              <label>&nbsp;</label>
+              <button id="btnClearTime" class="btn">시간삭제</button>
+            </div>
+          </div>
+          <div class="field">
+            <label><strong>선택된 작업자</strong></label>
+            <div id="asSelected" class="row" style="min-height:40px;border:1px dashed #ddd;border-radius:6px;padding:8px"></div>
+          </div>
+        </div>
+
+        <!-- 우측: 작업자 선택 -->
+        <div class="card">
+          <div class="row" style="margin-bottom:8px">
+            <input id="empSearch" class="inp" placeholder="작업자 검색(이름/부서/사번)" style="flex:1;min-width:180px">
+            <select id="empDeptFilter" class="sel" style="width:140px;min-width:120px">
+              <option value="">전체 부서</option>
+              <option>생산부</option><option>품질관리부</option><option>영업부</option>
+              <option>관리부</option><option>연구개발부</option><option>물류부</option>
+            </select>
+          </div>
+          <div class="tbl-wrap" style="max-height:380px">
+            <table>
+              <thead><tr><th style="width:36px">선택</th><th>사번</th><th>이름</th><th>부서</th><th>직급</th></tr></thead>
+              <tbody id="empPickTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnAssignCancel">취소</button>
+        <button class="btn primary" id="btnAssignSave">확인</button>
+      </div>
+    </div>
+  </div>
 
   <main class="container">
     <section class="welcome">
@@ -266,6 +353,12 @@
           <h3 class="menu-card-title">사원관리</h3>
           <p class="menu-card-desc">사원 정보를 등록하고 관리합니다</p>
         </a>
+
+        <a href="worker-assignment.html" class="menu-card" data-perm="assign.print" data-perm-mode="hide">
+          <div class="menu-card-icon">👷</div>
+          <h3 class="menu-card-title">작업자 편성 관리</h3>
+          <p class="menu-card-desc">등록된 작업자 편성을 조회하고 수정합니다</p>
+        </a>
       </div>
     </section>
   </main>
@@ -273,12 +366,29 @@
   <script src="assets/perm.js"></script>
   <script src="assets/nav.js"></script>
   <script>
-    // 로그인 확인
+    // 세션 확인
     const empNo = sessionStorage.getItem('sepnp_emp_no');
     const empName = sessionStorage.getItem('sepnp_emp_name');
-    if (!empNo) { window.location.href = 'index.html'; }
+    const empRole = sessionStorage.getItem('sepnp_emp_role');
 
-    document.getElementById('welcomeMsg').textContent = `${empName || '사용자'}님 환영합니다`;
+    if (!empNo) {
+      alert('로그인이 필요합니다.');
+      location.href = 'index.html';
+    }
+
+    // 권한 로드
+    let userPerms = [];
+    try {
+      const permsJson = sessionStorage.getItem('sepnp_emp_perms');
+      if (permsJson) {
+        userPerms = JSON.parse(permsJson);
+      }
+    } catch (e) {
+      console.error('권한 파싱 오류:', e);
+    }
+
+    console.log('✅ 로그인 사용자:', empName, '/', empRole);
+    console.log('✅ 권한:', userPerms);
 
     function loadStats() {
       try {
@@ -317,10 +427,273 @@
         document.getElementById('statProducts').textContent = '0';
       }
     }
+    
+    // ===== 작업자 편성 로직 =====
+    const KEY_ASSIGNMENTS = 'sepnp_worker_assignments';
+
+    const PROCESS_MAP = {
+      'assign.print': { 
+        name: '인쇄', 
+        machines: ['1호기','2호기','3호기'] 
+      },
+      'assign.coating': { 
+        name: '코팅', 
+        machines: ['오버코팅 1호기','오버코팅 2호기','오버코팅 3호기','UV코팅기','라미네이팅기','하이델베르그금박기','YUYIN 1호기','YUYIN 2호기'] 
+      },
+      'assign.adhesive': { 
+        name: '접착', 
+        machines: ['접착 1호기','접착 2호기','접착 3호기','접착 4호기','접착 5호기','접착 6호기','접착 7호기','PE접착기'] 
+      },
+      'assign.thomson': { 
+        name: '톰슨', 
+        machines: ['1호기','2호기','3호기','4호기','5호기'] 
+      },
+      'assign.lamination': { 
+        name: '합지', 
+        machines: ['합지기','합지톰슨기'] 
+      }
+    };
+
+    function getMyAssignPerms(){
+      const perms = [];
+      
+      // 관리자는 모든 권한 자동 부여
+      if(empRole === 'admin') {
+        console.log('[getMyAssignPerms] 관리자 → 모든 배정 권한 부여');
+        return Object.keys(PROCESS_MAP);
+      }
+      
+      // Permissions 모듈이 로드되었는지 확인
+      if(!window.Permissions){
+        console.warn('[getMyAssignPerms] Permissions 모듈 없음');
+        return perms;
+      }
+      
+      for(let p in PROCESS_MAP){
+        if(Permissions.has(p)) {
+          perms.push(p);
+        }
+      }
+      
+      console.log('[getMyAssignPerms] 감지된 권한:', perms);
+      return perms;
+    }
+
+    function loadAssignments(){
+      try{ return JSON.parse(localStorage.getItem(KEY_ASSIGNMENTS) || '{}'); }
+      catch(e){ return {}; }
+    }
+    function saveAssignments(data){
+      localStorage.setItem(KEY_ASSIGNMENTS, JSON.stringify(data));
+    }
+
+    let currentProcessPerm = null;
+    const selectedEmpNos = new Set();
+
+    function openAssignModal(processPerm){
+      console.log('[openAssignModal] 호출됨, 권한:', processPerm);
+      if(!processPerm || !PROCESS_MAP[processPerm]) {
+        console.error('[openAssignModal] 유효하지 않은 권한:', processPerm);
+        return;
+      }
+      currentProcessPerm = processPerm;
+      const pdata = PROCESS_MAP[processPerm];
+
+      document.getElementById('assignModalTitle').textContent = `${pdata.name} 작업자 편성`;
+      document.getElementById('asProcess').value = pdata.name;
+
+      // 호기 목록
+      const mach = document.getElementById('asMachine');
+      mach.innerHTML = pdata.machines.map(v=>`<option>${v}</option>`).join('');
+
+      // 기본값
+      const today = new Date().toISOString().slice(0,10);
+      document.getElementById('asDate').value = today;
+      document.querySelector("input[name='asTeam'][value='A']").checked = true;
+      document.querySelector("input[name='asShift'][value='주간']").checked = true;
+      
+      // 주간 기본 시간 설정
+      document.getElementById('asStart').value = '08:30';
+      document.getElementById('asEnd').value = '17:30';
+
+      selectedEmpNos.clear();
+      renderSelectedTags();
+      renderEmployeePicker();
+
+      document.getElementById('assignModal').classList.add('show');
+      console.log('[openAssignModal] 모달 표시됨');
+    }
+
+    function closeAssignModal(){
+      currentProcessPerm = null;
+      document.getElementById('assignModal').classList.remove('show');
+    }
+
+    function getActiveEmployees(){
+      try{
+        const emps = JSON.parse(localStorage.getItem('sepnp_employees')||'[]');
+        return emps.filter(e=> (e.status||'active')==='active');
+      }catch(e){ return []; }
+    }
+
+    function renderSelectedTags(){
+      const box = document.getElementById('asSelected');
+      const emps = getActiveEmployees().filter(e=>selectedEmpNos.has(e.empNo));
+      box.innerHTML = emps.map(e=>`<span class="tag">${e.name} <small style="color:#6b7280">(${e.empNo})</small></span>`).join('')
+        || '<span style="color:#9ca3af;font-size:12px">작업자를 선택하세요</span>';
+    }
+
+    function renderEmployeePicker(){
+      const q = (document.getElementById('empSearch').value||'').trim().toLowerCase();
+      const dept = document.getElementById('empDeptFilter').value||'';
+      const tb = document.getElementById('empPickTbody');
+      const list = getActiveEmployees().filter(e=>{
+        const okQ = !q || (e.name||'').toLowerCase().includes(q) || (e.empNo||'').toLowerCase().includes(q) || (e.dept||'').toLowerCase().includes(q);
+        const okD = !dept || e.dept===dept;
+        return okQ && okD;
+      });
+      tb.innerHTML = list.map(e=>`
+        <tr>
+          <td><input type="checkbox" data-empno="${e.empNo}" ${selectedEmpNos.has(e.empNo)?'checked':''}></td>
+          <td>${e.empNo}</td>
+          <td>${e.name}</td>
+          <td>${e.dept||'-'}</td>
+          <td>${e.position||'-'}</td>
+        </tr>
+      `).join('');
+
+      tb.querySelectorAll("input[type='checkbox']").forEach(chk=>{
+        chk.addEventListener('change', ()=>{
+          const no = chk.dataset.empno;
+          if(chk.checked) selectedEmpNos.add(no); else selectedEmpNos.delete(no);
+          renderSelectedTags();
+        });
+      });
+    }
+
+    // 이벤트 바인딩
+    document.getElementById('btnClearTime')?.addEventListener('click', ()=>{
+      document.getElementById('asStart').value = '';
+      document.getElementById('asEnd').value = '';
+    });
+    
+    // 근무 형태 변경 시 시간 자동 설정
+    document.querySelectorAll("input[name='asShift']").forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const shift = e.target.value;
+        if(shift === '주간'){
+          document.getElementById('asStart').value = '08:30';
+          document.getElementById('asEnd').value = '17:30';
+        } else if(shift === '야간'){
+          document.getElementById('asStart').value = '18:30';
+          document.getElementById('asEnd').value = '';
+        }
+      });
+    });
+    
+    document.getElementById('btnAssignCancel')?.addEventListener('click', closeAssignModal);
+    document.getElementById('btnAssignSave')?.addEventListener('click', ()=>{
+      if(!currentProcessPerm) return;
+      const pdata = PROCESS_MAP[currentProcessPerm];
+      const date = document.getElementById('asDate').value;
+      const machine = document.getElementById('asMachine').value;
+      const team = document.querySelector("input[name='asTeam']:checked")?.value||'A';
+      const shift = document.querySelector("input[name='asShift']:checked")?.value||'주간';
+      const start = document.getElementById('asStart').value;
+      const end = document.getElementById('asEnd').value;
+
+      if(!date){ alert('작업일을 선택하세요.'); return; }
+      if(!machine){ alert('호기를 선택하세요.'); return; }
+      if(selectedEmpNos.size===0){ alert('작업자를 1명 이상 선택하세요.'); return; }
+
+      const data = loadAssignments();
+      data[date] = data[date] || [];
+      data[date].push({
+        process: pdata.name,
+        processPerm: currentProcessPerm,
+        machine, date, team, shift, start, end,
+        workers: Array.from(selectedEmpNos),
+        createdBy: empNo, createdByName: empName,
+        createdAt: new Date().toISOString()
+      });
+      saveAssignments(data);
+      alert(`${pdata.name} 작업자 편성이 저장되었습니다.`);
+      closeAssignModal();
+    });
+
+    document.getElementById('empSearch')?.addEventListener('input', renderEmployeePicker);
+    document.getElementById('empDeptFilter')?.addEventListener('change', renderEmployeePicker);
+    document.getElementById('assignModal')?.addEventListener('click', (e)=>{ if(e.target.id==='assignModal') closeAssignModal(); });
+
+    // 첫 로그인 시 하루 1회 자동 표시
+    function tryShowAssignModal(){
+      console.log('[tryShowAssignModal] 실행');
+      const today = new Date().toISOString().slice(0,10);
+      const myPerms = getMyAssignPerms();
+      
+      console.log('[tryShowAssignModal] empNo:', empNo);
+      console.log('[tryShowAssignModal] empRole:', empRole);
+      console.log('[tryShowAssignModal] 내 배정 권한:', myPerms);
+      
+      if (!empNo) {
+        console.log('[tryShowAssignModal] 로그인 안 됨');
+        return;
+      }
+      
+      if (myPerms.length === 0) {
+        console.log('[tryShowAssignModal] 배정 권한 없음');
+        return;
+      }
+      
+      const sentinelKey = `sepnp_assign_prompt_${empNo}_${today}`;
+      const alreadyShown = localStorage.getItem(sentinelKey);
+      
+      console.log('[tryShowAssignModal] 센티널 키:', sentinelKey);
+      console.log('[tryShowAssignModal] 오늘 이미 표시됨:', alreadyShown);
+      
+      if (alreadyShown) {
+        console.log('[tryShowAssignModal] 오늘 이미 모달 표시됨 - 중단');
+        return;
+      }
+      
+      // 권한 순서: 인쇄 > 톰슨 > 코팅 > 접착 > 합지
+      const order = ['assign.print','assign.thomson','assign.coating','assign.adhesive','assign.lamination'];
+      const firstPerm = order.find(p => myPerms.includes(p));
+      
+      console.log('[tryShowAssignModal] 선택된 권한:', firstPerm);
+      
+      if(firstPerm){
+        console.log('[tryShowAssignModal] ✅ 모달 오픈 시작:', PROCESS_MAP[firstPerm].name);
+        openAssignModal(firstPerm);
+        localStorage.setItem(sentinelKey, '1');
+      } else {
+        console.log('[tryShowAssignModal] ❌ 유효한 권한 없음');
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', ()=>{
+      console.log('='.repeat(50));
+      console.log('[DOMContentLoaded] 페이지 로드 완료');
+      console.log('[DOMContentLoaded] empNo:', empNo);
+      console.log('[DOMContentLoaded] empRole:', empRole);
+      console.log('[DOMContentLoaded] Permissions 모듈:', window.Permissions ? '있음' : '없음');
+      console.log('='.repeat(50));
+      
       Permissions.applyGates();
       loadStats();
+
+      // 여러 시점에서 모달 표시 시도
+      tryShowAssignModal(); // 즉시 실행
+      
+      setTimeout(() => {
+        console.log('[Timeout 500ms] 재시도');
+        tryShowAssignModal();
+      }, 500);
+      
+      setTimeout(() => {
+        console.log('[Timeout 1000ms] 최종 재시도');
+        tryShowAssignModal();
+      }, 1000);
     });
   </script>
 </body>
