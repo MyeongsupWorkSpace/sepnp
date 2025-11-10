@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ["nodejs"]
-
-[phases.install]
-cmds = ["npm install --prefix server"]
-
-[start]
-cmd = "npm --prefix server start"

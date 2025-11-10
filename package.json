@@ -1,10 +1,11 @@
 {
-  "name": "sepnp-server",
+  "name": "sepnp-app",
   "version": "1.0.0",
-  "description": "SEPNP API + Static Portal",
-  "main": "server.js",
+  "private": true,
+  "description": "SEPNP API + Static Portal (Railway)",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
@@ -14,7 +15,6 @@
     "dotenv": "^16.4.5"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=18.0.0"
   }
 }
