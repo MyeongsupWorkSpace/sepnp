@@ -1,6 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 
+console.log('🔍 [DEBUG] 모든 환경변수:', {
+  MYSQLHOST: process.env.MYSQLHOST,
+  RAILWAY_PRIVATE_DOMAIN: process.env.RAILWAY_PRIVATE_DOMAIN,
+  DB_HOST: process.env.DB_HOST,
+  MYSQLPORT: process.env.MYSQLPORT,
+  MYSQLUSER: process.env.MYSQLUSER,
+  MYSQLDATABASE: process.env.MYSQLDATABASE,
+  MYSQLPASSWORD: process.env.MYSQLPASSWORD ? '***설정됨***' : 'undefined',
+  NODE_ENV: process.env.NODE_ENV,
+  RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT
+});
+
 // Railway 등 외부에서 MYSQLHOST 주입되면 .env(local) 로드 생략
 const isProd = process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV === 'production';
 const localEnvPath = path.resolve(__dirname, '.env.local');
@@ -29,12 +41,7 @@ console.log('[DB] 최종 설정:', {
   port: cfg.port,
   user: cfg.user,
   database: cfg.database,
-  passwordSet: !!cfg.password,
-  sourceHostEnv: {
-    MYSQLHOST: process.env.MYSQLHOST,
-    RAILWAY_PRIVATE_DOMAIN: process.env.RAILWAY_PRIVATE_DOMAIN,
-    DB_HOST: process.env.DB_HOST
-  }
+  passwordSet: !!cfg.password
 });
 
 // 필수값 체크
@@ -46,7 +53,7 @@ let missing = [];
   }
 });
 if (missing.length) {
-  console.error('⚠️ [DB] 누락된 항목 때문에 연결 실패 예상:', missing.join(', '));
+  console.error('⚠️ [DB] 누락된 항목:', missing.join(', '));
 }
 
 const pool = mysql.createPool({
