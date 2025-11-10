@@ -3,9 +3,8 @@ nixPkgs = ["nodejs_18"]
 
 [phases.install]
 cmds = [
-  "cd server",
-  "rm -rf node_modules package-lock.json",
-  "npm install"
+  "cd server && rm -rf node_modules package-lock.json",
+  "cd server && npm install"
 ]
 
 [start]
