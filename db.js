@@ -1,4 +1,18 @@
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
+
+// .env 로드(로컬용). Railway에선 무시됨.
+const envCandidates = [
+  path.resolve(__dirname, '.env'),
+  path.resolve(__dirname, 'server/.env')
+];
+for (const p of envCandidates) {
+  if (fs.existsSync(p)) {
+    require('dotenv').config({ path: p });
+    break;
+  }
+}
+
 const mysql = require('mysql2/promise');
 
 const cfg = {
@@ -9,20 +23,16 @@ const cfg = {
   database: process.env.MYSQLDATABASE || process.env.DB_NAME
 };
 
-// 디버깅: 환경변수 확인
-console.log('[DB] 환경변수 체크:', {
-  MYSQLHOST: cfg.host,
-  MYSQLPORT: cfg.port,
-  MYSQLUSER: cfg.user,
-  MYSQLPASSWORD: cfg.password ? '설정됨' : '비어있음',
-  MYSQLDATABASE: cfg.database
+console.log('[DB] 설정:', {
+  host: cfg.host,
+  port: cfg.port,
+  user: cfg.user,
+  database: cfg.database,
+  hasPassword: !!cfg.password
 });
 
-// 필수값 검증
-['host', 'user', 'password', 'database'].forEach(key => {
-  if (!cfg[key]) {
-    console.error(`❌ [DB] Missing required config: ${key}`);
-  }
+['host','user','password','database'].forEach(k => {
+  if (!cfg[k]) console.error(`❌ [DB] 누락된 설정: ${k}`);
 });
 
 const pool = mysql.createPool({
@@ -30,18 +40,13 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0
 });
 
-// 연결 테스트
+// 연결 테스트(앱 중단 없음)
 pool.getConnection()
-  .then(c => {
-    console.log(`✅ [DB] MySQL 연결 성공: ${cfg.host}:${cfg.port}/${cfg.database}`);
-    c.release();
-  })
-  .catch(e => {
-    console.error('❌ [DB] MySQL 연결 실패:', e.message);
-    console.error('    코드:', e.code);
-    console.error('    errno:', e.errno);
-  });
+  .then(c => { console.log(`✅ [DB] 연결 성공: ${cfg.host}:${cfg.port}/${cfg.database}`); c.release(); })
+  .catch(e => { console.error('❌ [DB] 연결 실패:', e.message, '(host=', cfg.host, ')'); });
 
 module.exports = pool;
