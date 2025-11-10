@@ -11,20 +11,11 @@ const cfg = {
 
 // 디버깅: 환경변수 확인
 console.log('[DB] 환경변수 체크:', {
-  MYSQLHOST: process.env.MYSQLHOST ? '✅' : '❌',
-  MYSQLPORT: process.env.MYSQLPORT ? '✅' : '❌',
-  MYSQLUSER: process.env.MYSQLUSER ? '✅' : '❌',
-  MYSQLPASSWORD: process.env.MYSQLPASSWORD ? '✅' : '❌',
-  MYSQLDATABASE: process.env.MYSQLDATABASE ? '✅' : '❌',
-  DB_HOST: process.env.DB_HOST ? '✅' : '❌',
-});
-
-console.log('[DB] 연결 설정:', {
-  host: cfg.host,
-  port: cfg.port,
-  user: cfg.user,
-  database: cfg.database,
-  hasPassword: !!cfg.password
+  MYSQLHOST: cfg.host,
+  MYSQLPORT: cfg.port,
+  MYSQLUSER: cfg.user,
+  MYSQLPASSWORD: cfg.password ? '설정됨' : '비어있음',
+  MYSQLDATABASE: cfg.database
 });
 
 // 필수값 검증
@@ -39,8 +30,6 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  enableKeepAlive: true,
-  keepAliveInitialDelay: 0
 });
 
 // 연결 테스트
