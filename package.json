@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "SEPNP Portal Website",
   "scripts": {
-    "start": "serve sepnp-portal -l $PORT"
+    "start": "serve sepnp-portal -p $PORT"
   },
   "dependencies": {
     "serve": "^14.2.0"
