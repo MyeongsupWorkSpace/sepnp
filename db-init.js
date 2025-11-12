@@ -122,4 +122,41 @@ module.exports = async function initDb() {
     console.error('❌ DB 초기화 실패:', err.message);
     throw err;
   }
+
+  // 간단한 스키마: suppliers, papers, products
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS suppliers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(200) NOT NULL,
+      contact VARCHAR(200),
+      UNIQUE KEY ux_suppliers_name (name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS papers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(200) NOT NULL,
+      size VARCHAR(100),
+      weight VARCHAR(100),
+      UNIQUE KEY ux_papers_name (name)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS products (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      code VARCHAR(100),
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      price DECIMAL(13,2) DEFAULT 0,
+      supplier_id INT,
+      paper_id INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (supplier_id) REFERENCES suppliers(id) ON DELETE SET NULL,
+      FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+
+  console.log('✅ DB 스키마 초기화 완료');
 };

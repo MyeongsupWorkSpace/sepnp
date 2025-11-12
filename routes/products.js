@@ -47,22 +47,60 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// 제품 등록
+// 제품 등록: body에 { code, name, description, price, supplier: { name, contact }, paper: { name, size, weight } }
 router.post('/', async (req, res) => {
+  const conn = await db.getConnection();
   try {
-    const { id, code, name, category, spec, unit, unit_price, stock, min_stock, status } = req.body;
-    
-    await db.query(
-      `INSERT INTO products (id, code, name, category, spec, unit, unit_price, stock, min_stock, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, code, name, category, spec, unit, unit_price || 0, stock || 0, min_stock || 0, status || 'active']
+    await conn.beginTransaction();
+
+    const { code, name, description, price } = req.body;
+    const supplier = req.body.supplier || {};
+    const paper = req.body.paper || {};
+
+    // 1) supplier upsert by name
+    let supplierId = null;
+    if (supplier && supplier.name) {
+      const [rows] = await conn.query('SELECT id FROM suppliers WHERE name = ? LIMIT 1', [supplier.name]);
+      if (rows.length) {
+        supplierId = rows[0].id;
+        // optional: update contact
+        if (supplier.contact) {
+          await conn.query('UPDATE suppliers SET contact=? WHERE id=?', [supplier.contact, supplierId]);
+        }
+      } else {
+        const [r] = await conn.query('INSERT INTO suppliers (name, contact) VALUES (?, ?)', [supplier.name, supplier.contact || null]);
+        supplierId = r.insertId;
+      }
+    }
+
+    // 2) paper upsert by name
+    let paperId = null;
+    if (paper && paper.name) {
+      const [rows2] = await conn.query('SELECT id FROM papers WHERE name = ? LIMIT 1', [paper.name]);
+      if (rows2.length) {
+        paperId = rows2[0].id;
+        // optional: update size/weight
+        await conn.query('UPDATE papers SET size = COALESCE(?, size), weight = COALESCE(?, weight) WHERE id = ?', [paper.size || null, paper.weight || null, paperId]);
+      } else {
+        const [r2] = await conn.query('INSERT INTO papers (name, size, weight) VALUES (?, ?, ?)', [paper.name, paper.size || null, paper.weight || null]);
+        paperId = r2.insertId;
+      }
+    }
+
+    // 3) insert product
+    const [pr] = await conn.query(
+      'INSERT INTO products (code, name, description, price, supplier_id, paper_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [code || null, name, description || null, price || 0, supplierId, paperId]
     );
-    
-    console.log(`  ✅ 제품 등록: ${name} (${code})`);
-    res.json({ ok: true });
-  } catch (error) {
-    console.error('  ❌ 제품 등록 오류:', error);
-    res.status(500).json({ ok: false, error: '등록 실패' });
+
+    await conn.commit();
+    res.status(201).json({ ok: true, productId: pr.insertId });
+  } catch (err) {
+    await conn.rollback();
+    console.error('제품 등록 오류:', err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    conn.release();
   }
 });
 

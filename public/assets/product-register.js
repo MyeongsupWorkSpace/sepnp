@@ -444,3 +444,35 @@
     bindForm();
   });
 })();
+
+// 예시: 폼에서 값 읽어 POST
+async function submitProductForm(evt) {
+  evt.preventDefault();
+  const payload = {
+    code: document.querySelector('#code').value,
+    name: document.querySelector('#name').value,
+    description: document.querySelector('#description').value,
+    price: parseFloat(document.querySelector('#price').value || 0),
+    supplier: {
+      name: document.querySelector('#supplier_name').value,
+      contact: document.querySelector('#supplier_contact').value
+    },
+    paper: {
+      name: document.querySelector('#paper_name').value,
+      size: document.querySelector('#paper_size').value,
+      weight: document.querySelector('#paper_weight').value
+    }
+  };
+
+  const res = await fetch('/api/products', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const j = await res.json();
+  if (res.ok) {
+    alert('제품 등록 완료: ' + j.productId);
+  } else {
+    alert('등록 실패: ' + (j.error || res.status));
+  }
+}
