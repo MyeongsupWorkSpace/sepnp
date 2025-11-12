@@ -2,157 +2,89 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// 제품 목록 조회
+// GET list (기존 유지)
 router.get('/', async (req, res) => {
   try {
-    const { category, status } = req.query;
-    
-    let query = 'SELECT * FROM products WHERE 1=1';
-    let params = [];
-    
-    if (category) {
-      query += ' AND category = ?';
-      params.push(category);
-    }
-    
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
-    }
-    
-    query += ' ORDER BY created_at DESC';
-    
-    const [rows] = await db.query(query, params);
+    const [rows] = await db.query('SELECT p.*, s.name AS supplier_name, pa.name AS paper_name FROM products p LEFT JOIN suppliers s ON p.supplier_id = s.id LEFT JOIN papers pa ON p.paper_id = pa.id ORDER BY p.id DESC LIMIT 200');
     res.json(rows);
-  } catch (error) {
-    console.error('  ❌ 제품 조회 오류:', error);
-    res.status(500).json({ error: '서버 오류' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
   }
 });
 
-// 제품 상세 조회
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const [rows] = await db.query('SELECT * FROM products WHERE id = ?', [id]);
-    
-    if (rows.length === 0) {
-      return res.status(404).json({ error: '제품을 찾을 수 없습니다.' });
-    }
-    
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('  ❌ 제품 상세 조회 오류:', error);
-    res.status(500).json({ error: '서버 오류' });
-  }
-});
-
-// 제품 등록: body에 { code, name, description, price, supplier: { name, contact }, paper: { name, size, weight } }
+// 제품 등록: supplier/paper/materials 동시 처리
 router.post('/', async (req, res) => {
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
     const { code, name, description, price } = req.body;
-    const supplier = req.body.supplier || {};
-    const paper = req.body.paper || {};
+    const supplier = req.body.supplier || null;
+    const paper = req.body.paper || null;
+    const materials = Array.isArray(req.body.materials) ? req.body.materials : [];
+    const createdBy = req.body.created_by || null; // 프로덕션에서는 req.user.id로 대체
 
-    // 1) supplier upsert by name
+    // 1) supplier upsert
     let supplierId = null;
     if (supplier && supplier.name) {
-      const [rows] = await conn.query('SELECT id FROM suppliers WHERE name = ? LIMIT 1', [supplier.name]);
-      if (rows.length) {
-        supplierId = rows[0].id;
-        // optional: update contact
-        if (supplier.contact) {
-          await conn.query('UPDATE suppliers SET contact=? WHERE id=?', [supplier.contact, supplierId]);
-        }
+      const [srows] = await conn.query('SELECT id FROM suppliers WHERE name = ? LIMIT 1', [supplier.name]);
+      if (srows.length) {
+        supplierId = srows[0].id;
+        await conn.query('UPDATE suppliers SET contact = COALESCE(?, contact), phone = COALESCE(?, phone), email = COALESCE(?, email), address = COALESCE(?, address), updated_at = NOW() WHERE id = ?', [supplier.contact || null, supplier.phone || null, supplier.email || null, supplier.address || null, supplierId]);
       } else {
-        const [r] = await conn.query('INSERT INTO suppliers (name, contact) VALUES (?, ?)', [supplier.name, supplier.contact || null]);
-        supplierId = r.insertId;
+        const [sr] = await conn.query('INSERT INTO suppliers (name, contact, phone, email, address) VALUES (?, ?, ?, ?, ?)', [supplier.name, supplier.contact || null, supplier.phone || null, supplier.email || null, supplier.address || null]);
+        supplierId = sr.insertId;
       }
     }
 
-    // 2) paper upsert by name
+    // 2) paper upsert
     let paperId = null;
     if (paper && paper.name) {
-      const [rows2] = await conn.query('SELECT id FROM papers WHERE name = ? LIMIT 1', [paper.name]);
-      if (rows2.length) {
-        paperId = rows2[0].id;
-        // optional: update size/weight
-        await conn.query('UPDATE papers SET size = COALESCE(?, size), weight = COALESCE(?, weight) WHERE id = ?', [paper.size || null, paper.weight || null, paperId]);
+      const [prows] = await conn.query('SELECT id FROM papers WHERE name = ? LIMIT 1', [paper.name]);
+      if (prows.length) {
+        paperId = prows[0].id;
+        await conn.query('UPDATE papers SET size = COALESCE(?, size), weight = COALESCE(?, weight), description = COALESCE(?, description), updated_at = NOW() WHERE id = ?', [paper.size || null, paper.weight || null, paper.description || null, paperId]);
       } else {
-        const [r2] = await conn.query('INSERT INTO papers (name, size, weight) VALUES (?, ?, ?)', [paper.name, paper.size || null, paper.weight || null]);
-        paperId = r2.insertId;
+        const [pr] = await conn.query('INSERT INTO papers (name, size, weight, description) VALUES (?, ?, ?, ?)', [paper.name, paper.size || null, paper.weight || null, paper.description || null]);
+        paperId = pr.insertId;
       }
     }
 
-    // 3) insert product
-    const [pr] = await conn.query(
-      'INSERT INTO products (code, name, description, price, supplier_id, paper_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [code || null, name, description || null, price || 0, supplierId, paperId]
-    );
+    // 3) create product
+    const [prod] = await conn.query('INSERT INTO products (code, name, description, price, supplier_id, paper_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)', [code || null, name, description || null, price || 0, supplierId, paperId, createdBy]);
+    const productId = prod.insertId;
+
+    // 4) materials upsert and link
+    for (const m of materials) {
+      if (!m || !m.name) continue;
+      // upsert material by name
+      const [mrows] = await conn.query('SELECT id FROM materials WHERE name = ? LIMIT 1', [m.name]);
+      let materialId;
+      if (mrows.length) {
+        materialId = mrows[0].id;
+        await conn.query('UPDATE materials SET type = COALESCE(?, type), unit = COALESCE(?, unit), note = COALESCE(?, note), updated_at = NOW() WHERE id = ?', [m.type || null, m.unit || null, m.note || null, materialId]);
+      } else {
+        const [mr] = await conn.query('INSERT INTO materials (name, type, unit, note) VALUES (?, ?, ?, ?)', [m.name, m.type || null, m.unit || null, m.note || null]);
+        materialId = mr.insertId;
+      }
+
+      // link product_materials
+      const qty = parseFloat(m.quantity || 0);
+      await conn.query('INSERT INTO product_materials (product_id, material_id, quantity, unit, note) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE quantity = VALUES(quantity), unit = VALUES(unit), note = VALUES(note)', [productId, materialId, qty, m.unit || null, m.note || null]);
+    }
+
+    // 5) audit log
+    await conn.query('INSERT INTO audit_logs (actor_id, actor_name, action, entity, entity_id, payload, ip) VALUES (?, ?, ?, ?, ?, ?, ?)', [createdBy || null, null, 'create_product', 'product', productId, JSON.stringify(req.body || {}), req.ip || null]);
 
     await conn.commit();
-    res.status(201).json({ ok: true, productId: pr.insertId });
+    res.status(201).json({ ok: true, productId });
   } catch (err) {
     await conn.rollback();
     console.error('제품 등록 오류:', err);
     res.status(500).json({ error: err.message });
   } finally {
     conn.release();
-  }
-});
-
-// 제품 수정
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { code, name, category, spec, unit, unit_price, stock, min_stock, status } = req.body;
-    
-    await db.query(
-      `UPDATE products SET 
-        code = ?, name = ?, category = ?, spec = ?, unit = ?, 
-        unit_price = ?, stock = ?, min_stock = ?, status = ?
-       WHERE id = ?`,
-      [code, name, category, spec, unit, unit_price, stock, min_stock, status, id]
-    );
-    
-    console.log(`  ✅ 제품 수정: ${name}`);
-    res.json({ ok: true });
-  } catch (error) {
-    console.error('  ❌ 제품 수정 오류:', error);
-    res.status(500).json({ ok: false, error: '수정 실패' });
-  }
-});
-
-// 제품 삭제
-router.delete('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    await db.query('DELETE FROM products WHERE id = ?', [id]);
-    
-    console.log(`  ✅ 제품 삭제: ID ${id}`);
-    res.json({ ok: true });
-  } catch (error) {
-    console.error('  ❌ 제품 삭제 오류:', error);
-    res.status(500).json({ ok: false, error: '삭제 실패' });
-  }
-});
-
-// 재고 업데이트
-router.patch('/:id/stock', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { stock } = req.body;
-    
-    await db.query('UPDATE products SET stock = ? WHERE id = ?', [stock, id]);
-    
-    console.log(`  ✅ 재고 업데이트: ID ${id} → ${stock}`);
-    res.json({ ok: true });
-  } catch (error) {
-    console.error('  ❌ 재고 업데이트 오류:', error);
-    res.status(500).json({ ok: false, error: '업데이트 실패' });
   }
 });
 
