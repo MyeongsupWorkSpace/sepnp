@@ -32,16 +32,21 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/orders', require('./routes/orders'));
 
-// 헬스체크
+// Railway Health Check용 루트 경로
+app.get('/', (req, res) => {
+  res.status(200).send('OK');
+});
+
+// API Health Check
 app.get('/api/health', (req, res) => {
   res.json({ 
-    status: 'OK', 
+    status: 'OK',
     time: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.RAILWAY_ENVIRONMENT || 'development'
   });
 });
 
-// SPA 라우팅
+// SPA 라우팅 (맨 마지막에 위치)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
