@@ -31,6 +31,7 @@ app.use('/api/assignments', require('./routes/assignments'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/orders', require('./routes/orders'));
+app.use('/api/debug', require('./routes/debug'));
 
 // Railway Health Check용 루트 경로
 app.get('/', (req, res) => {
