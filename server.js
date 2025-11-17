@@ -47,6 +47,10 @@ try { app.use('/api/assignments', require('./routes/assignments')); } catch {}
 try { app.use('/api/products', require('./routes/products')); } catch {}
 try { app.use('/api/customers', require('./routes/customers')); } catch {}
 try { app.use('/api/orders', require('./routes/orders')); } catch {}
+try { app.use('/api/suppliers', require('./routes/suppliers')); } catch {}
+try { app.use('/api/papers', require('./routes/papers')); } catch {}
+try { app.use('/api/materials', require('./routes/materials')); } catch {}
+try { app.use('/api/users', require('./routes/users')); } catch {}
 
 // 루트: index.html 반환 (SPA)
 app.get('/', (req, res) => {

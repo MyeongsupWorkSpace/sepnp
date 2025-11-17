@@ -1,448 +1,234 @@
 /* 제품 등록 페이지 스크립트 (인라인 제거 버전) */
 (function(){
-  const NF = new Intl.NumberFormat('ko-KR');
-  const $ = s=>document.querySelector(s);
-  const $$ = s=>Array.from(document.querySelectorAll(s));
+  // 유틸
+  const $ = id => document.getElementById(id);
+  const qs = sel => document.querySelector(sel);
 
-  // 제품 목록 저장 키 추가
-  const PRODUCTS_KEY = 'sepnp_products_v1';
-  const loadProducts = () => JSON.parse(localStorage.getItem(PRODUCTS_KEY)||'[]');
-  const saveProducts = arr => localStorage.setItem(PRODUCTS_KEY, JSON.stringify(arr));
+  // 상태
+  let selectedVendor = null;
 
-  // ========== 거래처 ==========
-  const VENDOR_KEY='sepnp_vendors_v1';
-  const loadVendors = ()=> JSON.parse(localStorage.getItem(VENDOR_KEY)||'[]');
-  const saveVendors = list => localStorage.setItem(VENDOR_KEY, JSON.stringify(list));
-  const vendorRankedList = (term)=>{
-    const t=(term||'').trim().toLowerCase();
-    let list = loadVendors().slice();
-    list.sort((a,b)=>a.localeCompare(b,'ko'));
-    return t? list.filter(v=>v.toLowerCase().includes(t)) : list;
-  };
-
-  let selectedVendor=null;
-
-  function bindVendorModal(){
-    const prodVendor = $('#prodVendor');
-    $('#btnVendorManage').addEventListener('click', ()=>{
-      selectedVendor=null;
-      $('#vendorSearch').value=prodVendor.value;
-      renderVendorList();
-      $('#vendorModal').classList.add('show');
-    });
-    $('#btnVendorClose').addEventListener('click', ()=>$('#vendorModal').classList.remove('show'));
-    $('#vendorModal').addEventListener('click', (e)=>{ if(e.target===$('#vendorModal')) $('#vendorModal').classList.remove('show'); });
-    $('#vendorSearch').addEventListener('input', renderVendorList);
-
-    $('#btnVendorComplete').addEventListener('click', ()=>{
-      if(selectedVendor){ prodVendor.value = selectedVendor; }
-      $('#vendorModal').classList.remove('show');
-    });
-
-    function renderVendorList(){
-      const term = $('#vendorSearch').value;
-      const list = vendorRankedList(term);
-      if(!list.length){ $('#vendorListArea').innerHTML='<div class="mini" style="padding:8px;">등록된 거래처가 없습니다.</div>'; return; }
-      $('#vendorListArea').innerHTML = list.map(v=>
-        `<div class="row-inline" style="justify-content:space-between; padding:4px 6px;">
-          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${v}</span>
-          <button type="button" class="btn ${selectedVendor===v?'vendor-selected':''}" data-select="${v}">선택</button>
-        </div>`).join('');
+  // --- VENDOR (거래처) 관리 ---
+  async function fetchVendors(){
+    try{
+      const res = await fetch('/api/suppliers');
+      if(!res.ok) throw new Error('suppliers fetch failed');
+      return await res.json();
+    }catch(e){
+      console.warn('fetchVendors failed', e);
+      return [];
     }
-    $('#vendorListArea').addEventListener('click', (e)=>{
-      const v = e.target?.dataset?.select;
-      if(!v) return;
-      selectedVendor=v; $('#vendorSearch').value=v;
-      const term = $('#vendorSearch').value;
-      const list = vendorRankedList(term);
-      $('#vendorListArea').innerHTML = list.map(x=>
-        `<div class="row-inline" style="justify-content:space-between; padding:4px 6px;">
-          <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${x}</span>
-          <button type="button" class="btn ${selectedVendor===x?'vendor-selected':''}" data-select="${x}">선택</button>
-        </div>`).join('');
-    });
-    $('#btnVendorAdd').addEventListener('click', ()=>{
-      const v = $('#vendorSearch').value.trim();
-      if(!v) return;
-      const list = loadVendors();
-      if(list.includes(v)){ alert('이미 등록됨'); return; }
-      list.push(v); saveVendors(list); selectedVendor=v; renderVendorList();
-    });
-    $('#btnVendorUpdate').addEventListener('click', ()=>{
-      if(!selectedVendor){ alert('수정할 거래처 선택'); return; }
-      const v = $('#vendorSearch').value.trim();
-      if(!v){ alert('거래처명 입력'); return; }
-      const list = loadVendors(); const idx = list.indexOf(selectedVendor);
-      if(idx>-1){ list[idx]=v; saveVendors(list); selectedVendor=v; renderVendorList(); }
-    });
-    $('#btnVendorDelete').addEventListener('click', ()=>{
-      if(!selectedVendor){ alert('삭제할 거래처 선택'); return; }
-      let list = loadVendors().filter(x=>x!==selectedVendor);
-      saveVendors(list); selectedVendor=null; $('#vendorSearch').value=''; renderVendorList();
-    });
   }
 
-  // ========== 용지 / 합지 ==========
-  const PAPER_KEY = 'sepnp_papers_v1';
-  const loadPapers = () => JSON.parse(localStorage.getItem(PAPER_KEY)||'[]');
-  const savePapers = arr => localStorage.setItem(PAPER_KEY, JSON.stringify(arr));
-  function renderPaperSelect(selVal){
-    const sel = $('#prodPaperType');
-    const list = loadPapers().sort((a,b)=>a.localeCompare(b,'ko'));
-    sel.innerHTML = '<option value="">용지 선택</option>' + list.map(v=>`<option value="${v}">${v}</option>`).join('');
-    if(selVal) sel.value = selVal;
-  }
-
-  const LAMINATE_KEY = 'sepnp_laminates_v1';
-  const loadLaminates = () => JSON.parse(localStorage.getItem(LAMINATE_KEY)||'[]');
-  const saveLaminates = arr => localStorage.setItem(LAMINATE_KEY, JSON.stringify(arr));
-  function renderLaminateSelect(selVal){
-    const sel = $('#prodLaminateType');
-    const list = loadLaminates().sort((a,b)=>a.localeCompare(b,'ko'));
-    sel.innerHTML = '<option value="">합지 선택</option>' + list.map(v=>`<option value="${v}">${v}</option>`).join('');
-    if(selVal) sel.value = selVal;
-  }
-
-  function bindPaperLaminate(){
-    $('#btnAddPaper').addEventListener('click', ()=>{
-      const name = (prompt('추가할 용지명')||'').trim();
-      if(!name) return;
-      const list = loadPapers();
-      if(!list.includes(name)){ list.push(name); savePapers(list); }
-      renderPaperSelect(name);
-    });
-    renderPaperSelect();
-
-    $('#btnAddLaminate').addEventListener('click', ()=>{
-      const name = (prompt('추가할 합지명')||'').trim();
-      if(!name) return;
-      const list = loadLaminates();
-      if(!list.includes(name)){ list.push(name); saveLaminates(list); }
-      renderLaminateSelect(name);
-    });
-    renderLaminateSelect();
-
-    const lamNone=$('#lamNone'), lamSel=$('#prodLaminateType'), lamAddBtn=$('#btnAddLaminate'), lamW=$('#prodLamWidth'), lamH=$('#prodLamHeight'), lamRow=$('#laminateRow');
-    function updateLaminateDisabled(){
-      const dis=lamNone.checked;
-      lamSel.disabled=dis; lamSel.classList.toggle('is-disabled',dis); if(dis) lamSel.value='';
-      lamAddBtn.disabled=dis; lamAddBtn.classList.toggle('is-disabled',dis);
-      [lamW,lamH].forEach(el=>{ el.disabled=dis; el.classList.toggle('is-disabled',dis); if(dis) el.value=''; });
-      lamRow.classList.toggle('is-disabled',dis);
+  function renderVendorList(list){
+    const wrap = $('vendorListArea');
+    wrap.innerHTML = '';
+    if(!list.length){
+      wrap.innerHTML = '<div class="mini">거래처가 없습니다.</div>';
+      return;
     }
-    lamNone.addEventListener('change', updateLaminateDisabled);
-    updateLaminateDisabled();
-  }
-
-  // ========== 단가 ==========
-  const priceEl = ()=>$('#prodPrice');
-  function cleanDecimal(raw){ let s=(raw||'').replace(/[^\d.]/g,''); const i=s.indexOf('.'); if(i!==-1) s=s.slice(0,i+1)+s.slice(i+1).replace(/\./g,''); if(s==='.') s='0.'; return s; }
-  function formatWithCommaDecimal(raw){ const s=cleanDecimal(raw); const hasDot=s.includes('.'); const [iRaw,d='']=s.split('.'); const i=iRaw.replace(/^0+(?=\d)/,''); const f=i?NF.format(Number(i)):'0'; return hasDot?`${f}.${d}`:f; }
-  function bindPrice(){
-    const el = priceEl();
-    el.addEventListener('focus', ()=>{ el.value=(el.value||'').replace(/,/g,''); setTimeout(()=>el.setSelectionRange(el.value.length,el.value.length),0); });
-    el.addEventListener('input', ()=>{ el.value=formatWithCommaDecimal(el.value); });
-    el.addEventListener('blur', ()=>{ el.value=formatWithCommaDecimal(el.value); });
-  }
-  const getPriceValue = ()=>{ const raw=(priceEl().value||'').replace(/,/g,''); const n=parseFloat(raw); return Number.isNaN(n)?null:n; };
-
-  // ========== 공정 ==========
-  let processSummaries = [];
-  function renderProcessSummary(){
-    const processSummaryList = $('#processSummaryList');
-    if(!processSummaries.length){
-      processSummaryList.innerHTML = '<li class="mini">등록된 공정이 없습니다.</li>'; return;
-    }
-    // 카테고리 그룹핑
-    const grouped = {};
-    processSummaries.forEach((s, idx)=>{
-      let category='';
-      if(s.startsWith('UV인쇄') || s.startsWith('옵셋인쇄')) category='인쇄';
-      else if(s.startsWith('코팅')) category='코팅';
-      else if(s.startsWith('금박')) category='금박';
-      else if(s.startsWith('형압')) category='형압';
-      else if(s.startsWith('합지')) category='합지';
-      else if(s.startsWith('톰슨')) category='톰슨';
-      else if(s.startsWith('접착')) category='접착';
-      else category = s.split(' ')[0];
-      if(!grouped[category]) grouped[category]=[];
-      grouped[category].push({text:s, index:idx}); // .p 오타 수정
+    list.forEach(v=>{
+      const el = document.createElement('div');
+      el.style.padding='8px';
+      el.style.borderBottom='1px solid #eee';
+      el.style.display='flex';
+      el.style.justifyContent='space-between';
+      el.style.alignItems='center';
+      el.innerHTML = `<div style="min-width:0">
+                        <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${v.name}</div>
+                        <div class="mini">${v.contact||''} ${v.phone||''}</div>
+                      </div>
+                      <div style="margin-left:8px">
+                        <button class="btn select-vendor" data-id="${v.id}">선택</button>
+                      </div>`;
+      wrap.appendChild(el);
     });
-    const order = ['인쇄','코팅','금박','형압','합지','톰슨','접착'];
-    let html='';
-    order.forEach(cat=>{
-      if(grouped[cat]){
-        html += `<li style="background:#e7f3ff; border-color:#0078d4; font-weight:600; padding:4px 10px;">${cat}</li>`;
-        grouped[cat].forEach(item=>{
-          html += `<li data-index="${item.index}" style="cursor:pointer; margin-left:16px; background:#fff;" title="우클릭으로 삭제">${item.text}</li>`;
+    // 바인딩
+    wrap.querySelectorAll('.select-vendor').forEach(b=>{
+      b.addEventListener('click', async e=>{
+        const id = b.dataset.id;
+        const chosen = list.find(x=>String(x.id)===String(id));
+        if(chosen){
+          selectVendor(chosen);
+          closeVendorModal();
+        }
+      });
+    });
+  }
+
+  async function openVendorModal(){
+    $('vendorModal').classList.add('show');
+    $('vendorSearch').value = '';
+    const list = await fetchVendors();
+    renderVendorList(list);
+    $('vendorSearch').focus();
+  }
+  function closeVendorModal(){ $('vendorModal').classList.remove('show'); }
+
+  function selectVendor(v){
+    selectedVendor = v;
+    $('prodVendor').value = v.name;
+    $('prodVendor').dataset.vendorId = v.id;
+  }
+
+  async function handleVendorSearch(){
+    const q = $('vendorSearch').value.trim().toLowerCase();
+    const list = await fetchVendors();
+    const filtered = list.filter(v => (v.name||'').toLowerCase().includes(q) || (v.contact||'').toLowerCase().includes(q));
+    renderVendorList(filtered);
+  }
+
+  // Vendor add/update/delete (간단 구현)
+  async function vendorAdd(){
+    const name = prompt('추가할 거래처 이름을 입력하세요');
+    if(!name) return;
+    try{
+      const res = await fetch('/api/suppliers', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ name })
+      });
+      if(!res.ok) throw new Error('add failed');
+      const list = await fetchVendors();
+      renderVendorList(list);
+    }catch(e){ alert('거래처 추가 실패'); console.error(e); }
+  }
+
+  async function vendorDelete(){
+    const id = $('vendorListArea').querySelector('.select-vendor')?.dataset?.id;
+    // 단순화: 삭제는 리스트에서 선택후 처리 별도 구현 권장
+    alert('거래처 삭제는 목록에서 항목 선택 후 구현하세요.');
+  }
+
+  // --- PAPER (용지 / 합지) 관리 ---
+  async function loadPapers(){
+    try{
+      const res = await fetch('/api/papers');
+      if(!res.ok) throw new Error('papers fetch failed');
+      const list = await res.json();
+      populatePaperSelects(list);
+      return list;
+    }catch(e){
+      console.warn('loadPapers failed', e);
+      return [];
+    }
+  }
+
+  function populatePaperSelects(list){
+    const selP = $('prodPaperType');
+    const selL = $('prodLaminateType');
+    const makeOpt = (p) => {
+      const o = document.createElement('option');
+      o.value = p.id ?? (`local:${p.name}`);
+      o.textContent = p.name + (p.size ? ` (${p.size})` : '');
+      return o;
+    };
+    // 기본 초기화
+    [selP, selL].forEach(s => { s.innerHTML = '<option value="">용지 선택</option>'; });
+    list.forEach(p=>{
+      selP.appendChild(makeOpt(p));
+      selL.appendChild(makeOpt(p));
+    });
+  }
+
+  async function openPaperModal(){
+    $('paperModal').classList.add('show');
+    $('paperTypeInput').value = '';
+    $('paperSpecInput').value = '';
+    $('paperTypeInput').focus();
+  }
+  function closePaperModal(){ $('paperModal').classList.remove('show'); }
+
+  // 저장: 타입 레지스트리도 생성(선택시) + 규격 포함한 복합 레코드 생성
+  async function savePaperEntries(){
+    const type = $('paperTypeInput').value.trim();
+    const spec = $('paperSpecInput').value.trim();
+    const createType = $('paperCreateType').checked;
+
+    if(!type && !spec){ alert('타입 또는 규격 중 하나를 입력하세요.'); return; }
+
+    try{
+      // 1) 타입 레지스트리(선택시)
+      if(createType && type){
+        // create minimal paper row for type (name=type)
+        await fetch('/api/papers', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ name: type })
+        }).catch(()=>{ /* ignore */ });
+      }
+
+      // 2) 복합 규격 레코드: name = `${type} ${spec}` , size = spec
+      const combinedName = (type && spec) ? `${type} ${spec}` : (type || spec);
+      let createdId = null;
+      try{
+        const res = await fetch('/api/papers', {
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ name: combinedName, size: spec || null })
+        });
+        if(res.ok){
+          const json = await res.json();
+          // 서버가 생성된 id 반환하면 선택시 사용
+          createdId = json.id || json.insertId || null;
+        }
+      }catch(e){
+        console.warn('create combined paper failed', e);
+      }
+
+      // 3) reload select list and select created item if possible
+      const list = await loadPapers();
+      if(createdId){
+        // 선택
+        ['prodPaperType','prodLaminateType'].forEach(sid=>{
+          const s = $(sid);
+          const opt = Array.from(s.options).find(o => String(o.value) === String(createdId));
+          if(opt) s.value = createdId;
+        });
+      } else {
+        // fallback: select option by matching text
+        ['prodPaperType','prodLaminateType'].forEach(sid=>{
+          const s = $(sid);
+          const targetText = combinedName + (spec ? ` (${spec})` : '');
+          const opt = Array.from(s.options).find(o => o.textContent === targetText);
+          if(opt) s.value = opt.value;
         });
       }
-    });
-    processSummaryList.innerHTML = html;
 
-    // 우클릭 삭제
-    processSummaryList.addEventListener('contextmenu', (e)=>{
-      e.preventDefault();
-      const li = e.target.closest('li[data-index]');
-      if(!li) return;
-      const idx = parseInt(li.dataset.index,10);
-      const name = processSummaries[idx];
-      if(confirm(`"${name}" 공정을 삭제하시겠습니까?`)){
-        processSummaries.splice(idx,1);
-        renderProcessSummary();
-      }
-    });
-  }
-
-  function attachRegisterHandler(){ const b=$('#btnProcessRegister'); b && b.addEventListener('click', registerCurrentProcess); }
-
-  const processDetailEl = ()=>$('#processDetail');
-  function renderPrintDetail(){
-    processDetailEl().innerHTML = `
-      <div style="margin-bottom:8px;"><strong>인쇄</strong></div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>도수:</span>
-        <select id="printColorCount" class="sel" style="width:70px">
-          <option value="0">0도</option><option value="1">1도</option><option value="2">2도</option>
-          <option value="3">3도</option><option value="4" selected>4도</option><option value="5">5도</option><option value="6">6도</option>
-        </select>
-        <span class="mini">별색:</span>
-        <select id="printSpotCount" class="sel" style="width:70px">
-          <option value="0" selected>0도</option><option value="1">1도</option><option value="2">2도</option><option value="3">3도</option>
-        </select>
-      </div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>면:</span>
-        <label><input type="checkbox" id="printSideFront"> 전면</label>
-        <label><input type="checkbox" id="printSideBack"> 후면</label>
-        <span class="mini">(둘 다 체크 = 양면)</span>
-      </div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>방식:</span>
-        <label><input type="radio" name="printMethod" value="옵셋" checked> 옵셋인쇄</label>
-        <label><input type="radio" name="printMethod" value="UV"> UV인쇄</label>
-      </div>
-      <div class="row-inline"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>
-    `;
-    processDetailEl().style.display='block'; attachRegisterHandler();
-  }
-  function renderCoatingDetail(){
-    processDetailEl().innerHTML = `
-      <div style="margin-bottom:8px;"><strong>코팅</strong></div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>종류:</span><select id="coatingType" class="sel" style="width:150px;">
-          <option value="무광CR">무광CR</option><option value="유광CR">유광CR</option><option value="무광라미">무광라미</option>
-          <option value="유광라미">유광라미</option><option value="부분UV">부분UV</option><option value="전면UV">전면UV</option>
-          <option value="오버코팅">오버코팅</option><option value="실크">실크</option><option value="기타">기타</option>
-        </select>
-      </div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>면:</span>
-        <label><input type="checkbox" id="coatingSideFront"> 전면</label>
-        <label><input type="checkbox" id="coatingSideBack"> 후면</label>
-        <span class="mini">(둘 다 체크 = 양면)</span>
-      </div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>메모:</span><input id="coatingNote" class="inp" placeholder="코팅 상세 (기타 시 필수)" />
-      </div>
-      <div class="row-inline"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>
-    `;
-    processDetailEl().style.display='block'; attachRegisterHandler();
-  }
-  function renderFoilDetail(){
-    processDetailEl().innerHTML = `
-      <div style="margin-bottom:8px;"><strong>금박</strong></div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>색상:</span><input id="foilColor" class="inp" placeholder="예: 금색, 은색, 로즈골드 등" />
-      </div>
-      <div class="row-inline"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>
-    `; processDetailEl().style.display='block'; attachRegisterHandler();
-  }
-  function renderEmbossDetail(){
-    processDetailEl().innerHTML = `
-      <div style="margin-bottom:8px;"><strong>형압</strong></div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>종류:</span><select id="embossType" class="sel" style="width:150px;">
-          <option value="볼록(엠보)">볼록(엠보)</option><option value="오목(디보)">오목(디보)</option>
-        </select>
-      </div>
-      <div class="row-inline"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>
-    `; processDetailEl().style.display='block'; attachRegisterHandler();
-  }
-  function renderLaminateDetail(){
-    processDetailEl().innerHTML = `
-      <div style="margin-bottom:8px;"><strong>합지</strong></div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>종류:</span><select id="laminateType" class="sel">
-          <option value="F골">F골</option><option value="E골">E골</option><option value="B골">B골</option>
-          <option value="AB골">AB골</option><option value="A골">A골</option>
-        </select>
-      </div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>면:</span>
-        <label><input type="radio" name="laminateSide" value="편면" checked> 편면</label>
-        <label><input type="radio" name="laminateSide" value="양면"> 양면</label>
-      </div>
-      <div class="row-inline"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>
-    `; processDetailEl().style.display='block'; attachRegisterHandler();
-  }
-  function renderGlueDetail(){
-    processDetailEl().innerHTML = `
-      <div style="margin-bottom:8px;"><strong>접착</strong></div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>종류:</span><select id="glueType" class="sel" style="width:150px;">
-          <option value="1면">1면</option><option value="2면">2면</option><option value="3면">3면</option>
-          <option value="4면">4면</option><option value="5면">5면</option><option value="6면">6면</option>
-          <option value="창문접착 +1면">창문접착 +1면</option><option value="창문접착 +2면">창문접착 +2면</option>
-          <option value="창문접착 +3면">창문접착 +3면</option><option value="창문접착 +4면">창문접착 +4면</option>
-          <option value="기타">기타</option>
-        </select>
-      </div>
-      <div class="row-inline" style="margin-bottom:8px;">
-        <span>메모:</span><input id="glueNote" class="inp" placeholder="접착 상세 (기타 시 필수)" />
-      </div>
-      <div class="row-inline"><button type="button" class="btn primary" id="btnProcessRegister">등록</button></div>
-    `; processDetailEl().style.display='block'; attachRegisterHandler();
-  }
-
-  function updateProcessUI(val){
-    switch(val){
-      case '인쇄':   return renderPrintDetail();
-      case '코팅':   return renderCoatingDetail();
-      case '금박':   return renderFoilDetail();
-      case '형압':   return renderEmbossDetail();
-      case '합지':   return renderLaminateDetail();
-      case '톰슨':
-        processDetailEl().style.display='none'; processDetailEl().innerHTML='';
-        processSummaries.push('톰슨 일반'); renderProcessSummary(); alert('공정이 등록되었습니다: 톰슨 일반');
-        const tomsonCheck = $$('input[name="process"]').find(cb=>cb.value==='톰슨'); tomsonCheck && (tomsonCheck.checked=false);
-        return;
-      case '접착':   return renderGlueDetail();
-      default:
-        processDetailEl().style.display='none'; processDetailEl().innerHTML='';
+      alert('용지(합지) 등록 완료');
+      closePaperModal();
+    }catch(e){
+      console.error(e);
+      alert('용지 등록 중 오류');
     }
   }
 
-  function bindProcess(){
-    const checks = $$('input[name="process"]');
-    const list = $('#processSection');
-    list.addEventListener('change',(e)=>{
-      const clicked = e.target;
-      if(clicked && clicked.name==='process'){
-        if(clicked.checked){
-          checks.forEach(cb=>{ if(cb!==clicked) cb.checked=false; });
-          updateProcessUI(clicked.value);
-        }else{
-          processDetailEl().style.display='none'; processDetailEl().innerHTML='';
-        }
-      }
-    });
-  }
+  // --- 초기화 바인딩 ---
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    // vendor modal open
+    $('btnVendorManage').addEventListener('click', openVendorModal);
+    $('btnVendorClose').addEventListener('click', closeVendorModal);
+    $('btnVendorComplete').addEventListener('click', ()=>{ closeVendorModal(); });
 
-  function registerCurrentProcess(){
-    const checked = $$('input[name="process"]').find(cb=>cb.checked);
-    if(!checked){ alert('공정을 선택하세요.'); return; }
-    let summary='';
-    switch(checked.value){
-      case '인쇄':{
-        const color = parseInt($('#printColorCount')?.value||'0',10);
-        const spot  = parseInt($('#printSpotCount')?.value||'0',10);
-        const front = $('#printSideFront')?.checked||false;
-        const back  = $('#printSideBack')?.checked||false;
-        let sides = front&&back?'양면':front?'전면':back?'후면':'';
-        if(!sides){ alert('전면/후면 중 최소 1개 선택하세요.'); return; }
-        const method = (document.querySelector('input[name="printMethod"]:checked')?.value)||'옵셋';
-        const methodLabel = method==='UV'?'UV인쇄':'옵셋인쇄';
-        const total = color+spot;
-        const spotPart = spot>0?`(별색${spot}도)`:''; summary = `${methodLabel} ${total}도${spotPart} ${sides}`; break;
-      }
-      case '코팅':{
-        let type = $('#coatingType')?.value||''; const f=$('#coatingSideFront')?.checked||false; const b=$('#coatingSideBack')?.checked||false;
-        let sides = f&&b?'양면':f?'전면':b?'후면':'';
-        if(!sides){ alert('전면/후면 중 최소 1개 선택하세요.'); return; }
-        const note = $('#coatingNote')?.value?.trim()||'';
-        if(type==='기타'){ if(!note){ alert('기타 선택 시 메모 입력하세요.'); return; } type = note; summary = `코팅 ${type} ${sides}`; }
-        else summary = `코팅 ${type} ${sides}${note?` (${note})`:''}`; break;
-      }
-      case '금박':{
-        const color = $('#foilColor')?.value?.trim()||''; if(!color){ alert('금박 색상 입력하세요.'); return; } summary = `금박 ${color}`; break;
-      }
-      case '형압':{
-        const type = $('#embossType')?.value||''; summary = `형압 ${type}`; break;
-      }
-      case '합지':{
-        const type = $('#laminateType')?.value||''; const side = (document.querySelector('input[name="laminateSide"]:checked')?.value)||'편면';
-        summary = `합지 ${type} ${side}`; break;
-      }
-      case '접착':{
-        let type = $('#glueType')?.value||''; const note = $('#glueNote')?.value?.trim()||'';
-        if(type==='기타'){ if(!note){ alert('기타 선택 시 메모 입력하세요.'); return; } type = note; summary = `접착 ${type}`; }
-        else summary = `접착 ${type}${note?` (${note})`:''}`; break;
-      }
-      default: summary = checked.value;
-    }
-    processSummaries.push(summary);
-    renderProcessSummary();
-    alert(`공정이 등록되었습니다: ${summary}`);
-    checked.checked=false; processDetailEl().style.display='none'; processDetailEl().innerHTML='';
-  }
+    $('vendorSearch').addEventListener('input', debounce(handleVendorSearch, 250));
+    $('btnVendorAdd').addEventListener('click', vendorAdd);
+    $('btnVendorUpdate').addEventListener('click', ()=>alert('거래처 수정 기능은 추후 구현하세요.'));
+    $('btnVendorDelete').addEventListener('click', vendorDelete);
 
-  // ========== 폼 ==========
-  function bindForm(){
-    $('#prodForm').addEventListener('submit',(e)=>{
-      e.preventDefault();
+    // paper modal open
+    $('btnAddPaper').addEventListener('click', openPaperModal);
+    $('btnPaperCancel').addEventListener('click', closePaperModal);
+    $('btnPaperSave').addEventListener('click', savePaperEntries);
 
-      // 필수값 체크
-      const vendor = ($('#prodVendor').value||'').trim();
-      const name   = ($('#prodName').value||'').trim();
-      if(!vendor){ alert('거래처를 선택하세요.'); return; }
-      if(!name){ alert('제품명을 입력하세요.'); return; }
-
-      const product = {
-        id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-        vendor,
-        name,
-        size: { l:+($('#prodLength').value||'')||null, w:+($('#prodWidth').value||'')||null, h:+($('#prodHeight').value||'')||null },
-        paper:{ type:$('#prodPaperType').value||null, sizeW:+($('#prodPaperWidth').value||'')||null, sizeH:+($('#prodPaperHeight').value||'')||null },
-        laminate: $('#lamNone')?.checked ? null : ($('#prodLaminateType').value||null),
-        laminationSize: $('#lamNone')?.checked ? null : { w:+($('#prodLamWidth')?.value||'')||null, h:+($('#prodLamHeight')?.value||'')||null },
-        price: (()=>{
-          const raw = ($('#prodPrice').value||'').replace(/,/g,'');
-          const n = parseFloat(raw); return Number.isNaN(n)?null:n;
-        })(),
-        cutCount: +($('#prodCutCount').value||'')||null,
-        knifeSize: { w:+($('#prodKnifeWidth').value||'')||null, h:+($('#prodKnifeHeight').value||'')||null },
-        shipping: ($('#prodShipping').value||'').trim(),
-        manager:  ($('#prodManager').value||'').trim(),
-        managerPhone: ($('#prodManagerPhone').value||'').trim(),
-        processes: (typeof processSummaries!=='undefined'? processSummaries.slice(): []),
-        createdAt: Date.now()
-      };
-
-      // 저장
-      const list = loadProducts();
-      list.unshift(product);
-      saveProducts(list);
-
-      alert('저장되었습니다. 제품 목록에서 확인하세요.');
-      // 목록 페이지로 이동하려면 주석 해제 후 파일명에 맞게 수정
-      // location.href = 'product-list.html';
-    });
-
-    $('#clearProducts').addEventListener('click', ()=>{
-      if(confirm('입력한 내용을 모두 지울까요?')) location.reload();
-    });
-  }
-
-  // 초기화
-  document.addEventListener('DOMContentLoaded', ()=>{
-    bindVendorModal();
-    bindPaperLaminate();
-    bindPrice();
-    bindProcess();
-    renderProcessSummary();
-    bindForm();
+    // load initial lists
+    await loadPapers();
   });
+
+  // debounce
+  function debounce(fn, wait){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), wait); }; }
+
+  // expose for debugging
+  window._pr = { openVendorModal, openPaperModal, loadPapers };
+
 })();
 
 // 예시: 폼에서 값 읽어 POST
@@ -476,3 +262,219 @@ async function submitProductForm(evt) {
     alert('등록 실패: ' + (j.error || res.status));
   }
 }
+
+// --- 거래처 자동완성 추가 / 교체 섹션 ---
+(async function vendorAutocompleteModule(){
+  const $ = id => document.getElementById(id);
+  let cacheVendors = null;
+  let suggestions = [];
+  let selIndex = -1;
+
+  async function fetchVendors(force=false){
+    if(cacheVendors && !force) return cacheVendors;
+    try{
+      const res = await fetch('/api/suppliers');
+      cacheVendors = res.ok ? await res.json() : [];
+    }catch(e){
+      cacheVendors = [];
+    }
+    return cacheVendors;
+  }
+
+  function score(vName, q){
+    if(!q) return 9999;
+    const name = (vName||'').toLowerCase();
+    const ql = q.toLowerCase();
+    if(name.startsWith(ql)) return 0;
+    const idx = name.indexOf(ql);
+    if(idx>=0) return 10 + idx; // includes, prefer earlier matches
+    // approximate match: count sequential matching chars
+    let matched = 0, pi = 0;
+    for(const ch of ql){
+      const pos = name.indexOf(ch, pi);
+      if(pos>=0){ matched++; pi = pos+1; } else break;
+    }
+    return 200 - matched*5 + name.length*0.1;
+  }
+
+  function renderDropdown(list, q){
+    const wrap = $('vendorDropdown');
+    wrap.innerHTML = '';
+    suggestions = list;
+    selIndex = -1;
+    if(list.length === 0){
+      const no = document.createElement('div');
+      no.className = 'mini';
+      no.style.padding = '10px';
+      no.textContent = `결과 없음 — Enter로 "${q}" 신규 거래처 생성`;
+      wrap.appendChild(no);
+      wrap.style.display = 'block';
+      return;
+    }
+    for(let i=0;i<list.length;i++){
+      const v = list[i];
+      const row = document.createElement('div');
+      row.className = 'vendor-row';
+      row.dataset.index = i;
+      row.style.padding = '8px 10px';
+      row.style.cursor = 'pointer';
+      row.style.borderBottom = '1px solid #f2f6f8';
+      row.innerHTML = `<div style="min-width:0">
+                         <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(v.name)}</div>
+                         <div class="mini">${escapeHtml(v.contact||'')} ${escapeHtml(v.phone||'')}</div>
+                       </div>
+                       <div style="margin-left:8px;color:#666">선택</div>`;
+      row.addEventListener('click', ()=> chooseByIndex(i));
+      wrap.appendChild(row);
+    }
+    wrap.style.display = 'block';
+  }
+
+  function hideDropdown(){ const w=$('vendorDropdown'); if(w) w.style.display='none'; suggestions=[]; selIndex=-1; }
+
+  function chooseByIndex(i){
+    const v = suggestions[i];
+    if(!v) return;
+    const input = $('prodVendor');
+    input.value = v.name;
+    input.dataset.vendorId = v.id;
+    hideDropdown();
+  }
+
+  async function createVendor(name){
+    try{
+      const res = await fetch('/api/suppliers', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const text = await res.text();
+      let json;
+      try{ json = text ? JSON.parse(text) : null; } catch(e){ json = { raw: text }; }
+      if(!res.ok){
+        console.error('POST /api/suppliers 실패', res.status, json);
+        throw new Error(`서버 응답 ${res.status}`);
+      }
+      // 응답에 id 반환 기대
+      const newId = (json && (json.id || json.insertId)) || null;
+      // 캐시 갱신
+      await fetchVendors(true);
+      if(newId){
+        const found = cacheVendors.find(x=>String(x.id)===String(newId));
+        if(found){
+          $('prodVendor').value = found.name;
+          $('prodVendor').dataset.vendorId = found.id;
+        } else {
+          $('prodVendor').value = name;
+          $('prodVendor').dataset.vendorId = newId;
+        }
+      } else {
+        // 서버가 id를 안줬을 때의 안전 처리
+        $('prodVendor').value = name;
+        $('prodVendor').dataset.vendorId = '';
+      }
+      hideDropdown();
+      return json;
+    }catch(e){
+      console.error('createVendor error', e);
+      throw e;
+    }
+  }
+
+  function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  async function onInput(e){
+    const q = e.target.value.trim();
+    if(!q){ hideDropdown(); return; }
+    const list = await fetchVendors();
+    const scored = list
+      .map(v=>({ v, s: score(v.name, q) }))
+      .filter(x=>x.s < 1000) // includes or fuzzy
+      .sort((a,b)=> a.s - b.s)
+      .map(x=>x.v)
+      .slice(0,50);
+    renderDropdown(scored, q);
+  }
+
+  function highlight(index){
+    const wrap = $('vendorDropdown');
+    if(!wrap) return;
+    Array.from(wrap.children).forEach((ch,i)=>{
+      ch.style.background = i===index ? '#f6fbff' : '#fff';
+    });
+    const el = wrap.children[index];
+    if(el) el.scrollIntoView({ block:'nearest' });
+  }
+
+  // 기존 onKey -> 아래로 교체
+  async function onKey(e){
+    const wrap = $('vendorDropdown');
+    const visible = wrap && wrap.style.display !== 'none';
+    if(e.key === 'ArrowDown' && visible){
+      selIndex = Math.min(suggestions.length - 1, selIndex + 1);
+      highlight(selIndex);
+      e.preventDefault();
+      return;
+    }
+    if(e.key === 'ArrowUp' && visible){
+      selIndex = Math.max(0, selIndex - 1);
+      highlight(selIndex);
+      e.preventDefault();
+      return;
+    }
+
+    if(e.key === 'Enter'){
+      // 드롭다운에서 선택된 항목이 있으면 그것으로, 없으면 입력값으로 신규 생성 시도
+      if(visible && selIndex >= 0 && suggestions[selIndex]) {
+        chooseByIndex(selIndex);
+      } else {
+        const name = $('prodVendor').value.trim();
+        if(name){
+          // 비동기로 시도하고 실패하면 콘솔/alert로 노출
+          try{
+            await createVendor(name);
+          }catch(err){
+            console.error('createVendor failed:', err);
+            alert('거래처 생성 실패 (서버 에러). 개발자 콘솔을 확인하세요.');
+          }
+        }
+      }
+      e.preventDefault();
+      return;
+    }
+
+    if(e.key === 'Escape' && visible){
+      hideDropdown();
+      e.preventDefault();
+    }
+  }
+
+  document.addEventListener('click', (ev)=>{
+    if(!ev.target.closest || (!ev.target.closest('#vendorDropdown') && ev.target.id !== 'prodVendor')){
+      hideDropdown();
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', async ()=>{
+    const input = $('prodVendor');
+    if(!input) return;
+    input.removeAttribute('readonly'); // 기존 readonly 제거
+    input.addEventListener('input', debounce(onInput, 180));
+    input.addEventListener('keydown', onKey);
+
+    // vendor manage 버튼은 기존 모달 유지
+    const btn = $('btnVendorManage');
+    if(btn) btn.addEventListener('click', ()=> {
+      // open existing vendor modal if present
+      const modal = document.getElementById('vendorModal');
+      if(modal) modal.classList.add('show');
+    });
+
+    // preload vendors
+    await fetchVendors();
+  });
+
+  function debounce(fn, t){ let h; return (...a)=>{ clearTimeout(h); h=setTimeout(()=>fn(...a), t); }; }
+
+})(); 
+// --- end 거래처 자동완성 섹션 ---
