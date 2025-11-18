@@ -477,4 +477,202 @@ async function submitProductForm(evt) {
   function debounce(fn, t){ let h; return (...a)=>{ clearTimeout(h); h=setTimeout(()=>fn(...a), t); }; }
 
 })(); 
-// --- end 거래처 자동완성 섹션 ---
+(() => {
+  const qs = (s, r = document) => r.querySelector(s);
+  const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  // 요소 가져오기
+  const btnVendorModal = qs('#btnVendorModal');
+  const vendorModal = qs('#vendorModal');
+  const btnVendorClose = qs('#btnVendorClose');
+  const prodVendorInput = qs('#prodVendor');
+  const vendorSearch = qs('#vendorSearch');
+  const vendorList = qs('#vendorList');
+  const btnVendorAdd = qs('#btnVendorAdd');
+  const vendorDropdown = qs('#vendorDropdown');
+
+  // 요소 없으면 종료
+  if (!prodVendorInput || !vendorDropdown) return;
+
+  // 저장소
+  const STORE_KEY = 'sepmp.vendors';
+  const defaultVendors = [
+    '삼성전자','LG전자','현대자동차','SK하이닉스','네이버',
+    '카카오','쿠팡','배달의민족','토스','우아한형제들'
+  ];
+
+  const loadVendors = () => {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      const data = raw ? JSON.parse(raw) : defaultVendors;
+      return Array.isArray(data) ? [...new Set(data)].sort() : defaultVendors;
+    } catch { return defaultVendors; }
+  };
+  const saveVendors = list => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch {}
+  };
+
+  let vendors = loadVendors();
+
+  // 공개 API (필요 시 다른 스크립트에서 사용)
+  window.vendorStore = {
+    getAll: () => [...vendors],
+    add: (name) => addVendor(name),
+    remove: (name) => removeVendor(name)
+  };
+
+  function addVendor(name) {
+    const v = (name || '').trim();
+    if (!v) return { ok:false, msg:'거래처명을 입력하세요.' };
+    if (vendors.includes(v)) return { ok:false, msg:'이미 존재하는 거래처입니다.' };
+    vendors.push(v);
+    vendors.sort();
+    saveVendors(vendors);
+    return { ok:true };
+  }
+
+  function removeVendor(name) {
+    const idx = vendors.indexOf(name);
+    if (idx >= 0) {
+      vendors.splice(idx, 1);
+      saveVendors(vendors);
+      return true;
+    }
+    return false;
+  }
+
+  // 모달 렌더링
+  function renderVendorList(list) {
+    if (!vendorList) return;
+    if (!list || list.length === 0) {
+      vendorList.innerHTML = '<div style="padding:20px;text-align:center;color:#6b7280">검색 결과가 없습니다</div>';
+      return;
+    }
+    vendorList.innerHTML = list.map(v =>
+      `<div class="vendor-item" data-vendor="${v}">${v}</div>`
+    ).join('');
+
+    qsa('.vendor-item', vendorList).forEach(el => {
+      el.addEventListener('click', () => {
+        prodVendorInput.value = el.dataset.vendor || '';
+        closeModal();
+        prodVendorInput.focus();
+      });
+    });
+  }
+
+  function openModal() {
+    if (!vendorModal) return;
+    vendorModal.classList.add('show');
+    if (vendorSearch) {
+      vendorSearch.value = '';
+      vendorSearch.focus();
+    }
+    renderVendorList(vendors);
+  }
+  function closeModal() {
+    if (!vendorModal) return;
+    vendorModal.classList.remove('show');
+  }
+
+  // 자동완성 드롭다운
+  function openDropdown(list) {
+    if (!vendorDropdown) return;
+    if (!list || list.length === 0) return closeDropdown();
+    vendorDropdown.innerHTML = list.map(v =>
+      `<div class="vendor-item" data-vendor="${v}">${v}</div>`
+    ).join('');
+    vendorDropdown.classList.add('show');
+
+    qsa('.vendor-item', vendorDropdown).forEach(el => {
+      el.addEventListener('click', () => {
+        prodVendorInput.value = el.dataset.vendor || '';
+        closeDropdown();
+        prodVendorInput.focus();
+      });
+    });
+  }
+  function closeDropdown() {
+    if (!vendorDropdown) return;
+    vendorDropdown.classList.remove('show');
+    vendorDropdown.innerHTML = '';
+  }
+
+  function filterVendors(keyword) {
+    const k = (keyword || '').toLowerCase();
+    return vendors.filter(v => v.toLowerCase().includes(k));
+  }
+
+  // 이벤트 바인딩
+  if (btnVendorModal && vendorModal && vendorList) {
+    btnVendorModal.addEventListener('click', openModal);
+    btnVendorClose?.addEventListener('click', closeModal);
+    vendorModal.addEventListener('click', e => {
+      if (e.target === vendorModal) closeModal();
+    });
+    vendorSearch?.addEventListener('input', e => {
+      renderVendorList(filterVendors(e.target.value));
+    });
+    vendorSearch?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const filtered = filterVendors(vendorSearch.value);
+        if (filtered.length === 1) {
+          prodVendorInput.value = filtered[0];
+          closeModal();
+          prodVendorInput.focus();
+        }
+      } else if (e.key === 'Escape') {
+        closeModal();
+      }
+    });
+    btnVendorAdd?.addEventListener('click', () => {
+      const name = prompt('추가할 거래처명을 입력하세요:');
+      const res = addVendor(name || '');
+      if (!res.ok) {
+        alert(res.msg);
+        return;
+      }
+      alert('거래처가 추가되었습니다.');
+      renderVendorList(vendors);
+    });
+  }
+
+  // 입력창 자동완성
+  prodVendorInput.addEventListener('input', e => {
+    const val = e.target.value;
+    if (!val) return closeDropdown();
+    const filtered = filterVendors(val);
+    if (filtered.length === 0) return closeDropdown();
+    openDropdown(filtered);
+  });
+  prodVendorInput.addEventListener('focus', e => {
+    const val = e.target.value;
+    if (!val) return closeDropdown();
+    const filtered = filterVendors(val);
+    if (filtered.length > 0) openDropdown(filtered);
+  });
+  prodVendorInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDropdown();
+    if (e.key === 'Enter') {
+      // 드롭다운 첫 항목 자동 선택
+      const first = qs('.vendor-item', vendorDropdown);
+      if (vendorDropdown?.classList.contains('show') && first) {
+        e.preventDefault();
+        prodVendorInput.value = first.dataset.vendor || '';
+        closeDropdown();
+      }
+    }
+  });
+
+  // 외부 클릭 시 드롭다운 닫기
+  document.addEventListener('click', e => {
+    if (!vendorDropdown) return;
+    const withinInput = prodVendorInput.contains(e.target);
+    const withinDropdown = vendorDropdown.contains(e.target);
+    if (!withinInput && !withinDropdown) closeDropdown();
+  });
+
+  // 초기 렌더링 보정
+  closeDropdown();
+})();

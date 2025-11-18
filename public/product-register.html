@@ -6,143 +6,81 @@
   <title>제품 등록</title>
   <link rel="stylesheet" href="assets/nav.css">
   <style>
-  /* 컴팩트 + 한 줄 유지 */
-  :root{ --ctl-h:28px; --ctl-r:6px; --ctl-fs:13px }
-  .inp,.sel,textarea{ height:var(--ctl-h); padding:6px 8px; font-size:var(--ctl-fs); border-radius:var(--ctl-r) }
-  .btn{ height:var(--ctl-h); padding:0 10px; font-size:var(--ctl-fs); border-radius:var(--ctl-r) }
-  .card{ padding:12px }
-  .title{ margin-bottom:8px }
-  .row{ margin:4px 0; gap:8px; grid-template-columns:78px 1fr } /* 라벨 더 좁게 */
-
-  /* 거래처: 버튼을 우측에 딱 붙게 */
-  .nowrap{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; white-space:nowrap }
-  #prodVendor{ flex:1; min-width:0 } /* 줄바꿈 방지 */
-  #btnVendorManage{ width:56px }      /* 고정폭 */
-
-  /* 치수 한 줄(더 컴팩트) */
-  .dim-group{ display:flex; align-items:center; gap:6px; flex-wrap:nowrap; white-space:nowrap }
-  .dim{ position:relative }
-  .dim .inp{ width:74px; padding-right:24px } /* 입력 폭 더 줄임 */
-  .dim .unit{ position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#6b7280; font-size:12px }
-  .sep{ margin:0 2px; color:#9aa1a9; font-weight:700 }
-
-  /* 선택 박스 최소폭 축소 */
-  #prodPaperType,#prodLaminateType{ min-width:120px }
-
-  /* 상단 3열 동일 높이 */
-  .grid.top3{ grid-template-columns:repeat(3,minmax(0,1fr)); align-items:stretch; gap:10px }
-  .grid.top3 > *{ height:100% }
-  /* 한 줄 치수 입력 너비 축소 */
-  .dim .inp{ width:90px; padding-right:28px }
-  .sep{ margin:0 2px }
-  /* 선택 박스 최소 너비 축소 */
-  #prodPaperType,#prodLaminateType{ min-width:130px }
-  :root{ --bd:#e5e7eb; --fg:#111; --mut:#6b7280; --bg:#f5f6f8; --card:#fff; --primary:#2563eb; }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
-  .container{max-width:1200px;margin:24px auto;padding:0 16px}
-  h2{margin:0 0 14px;font-size:22px;font-weight:800}
-  .topbar{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .btn{height:36px;padding:0 14px;border:1px solid var(--bd);border-radius:8px;background:#fff;cursor:pointer}
-  .btn:hover{background:#f3f4f6}
-  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
-  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-  @media(max-width:1100px){ .grid{grid-template-columns:1fr} }
-  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px}
-  .title{font-weight:700;margin-bottom:10px}
-  .row{display:grid;grid-template-columns:96px 1fr;gap:10px;align-items:center;margin:8px 0}
-  .row-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .inp,.sel,textarea{height:36px;border:1px solid var(--bd);border-radius:8px;background:#fff;font-size:14px}
-  .inp,textarea{padding:8px 10px}
-  .sel{padding:0 10px}
-  .mini{font-size:12px;color:var(--mut)}
-  ul.clean{list-style:none;padding:0;margin:0} ul.clean li{padding:8px 10px;border:1px solid #eef2f5;border-radius:8px;margin:6px 0;background:#fff}
-  /* 모달 */
-  .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
-  .modal.show{display:flex}
-  .modal .panel{background:#fff;border:1px solid var(--bd);border-radius:12px;width:min(560px,100%);padding:16px}
-  .is-disabled{opacity:.6;pointer-events:none}
-  /* 추가 스타일 */
-  .dim-group{ display:flex; align-items:center; gap:8px; flex-wrap:nowrap; white-space:nowrap }
-  .dim-group > *{ flex:0 0 auto }
-  .dim .inp{ width:100px; padding-right:34px } /* 단위 자리 */
-  .sep{ margin:0 4px; color:#9aa1a9; font-weight:700 }
-  /* 균등 3칸 라인 */
-  .line3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; align-items:center }
-  .cell .mini{ display:block; margin-bottom:6px; color:#6b7280; font-size:12px }
-  .nowrap{ display:flex; align-items:center; gap:6px; white-space:nowrap; flex-wrap:nowrap }
-  .cell .sel{ min-width:160px }
-  .cell .btn{ width:32px; padding:0 }
-  /* 규격/크기 입력 한 줄 */
-  .dim-group{ display:flex; align-items:center; gap:6px; white-space:nowrap }
-  .dim{ position:relative }
-  .dim .inp{ width:74px; padding-right:24px }
-  .dim .unit{ position:absolute; right:8px; top:50%; transform:translateY(-50%); color:#6b7280; font-size:12px }
-  .sep{ margin:0 2px; color:#9aa1a9; font-weight:700 }
-  @media(max-width:560px){ .dim .inp{ width:96px } }
-
-  /* 치수 입력 공통 너비 변수 */
-  :root{ --dimw: 74px; }
-  /* 기존 .dim .inp가 있다면 너비를 변수로 교체 */
-  .dim .inp{ width:var(--dimw); padding-right:24px } /* ← 기존 width 값을 var(--dimw)로 */
-  /* 규격 서브라벨 */
-  .dim-wrap{ display:inline-flex; flex-direction:column }
-  .dim-sub{ display:flex; gap:6px; margin-top:2px; color:#9aa1a9; font-size:11px; line-height:1 }
-  .dim-sub span{ display:inline-block; width:var(--dimw); text-align:center }
-
-  /* 규격 한 줄: [입력]mm × [입력]mm × [입력]mm */
-  .dim-group{ display:flex; align-items:center; gap:8px; white-space:nowrap }
-  .dim{ display:inline-flex; align-items:center; gap:6px }
-  .br{ color:#6b7280; font-weight:600 }   /* 대괄호 스타일 */
-  .sep{ color:#9aa1a9; font-weight:700 }
-  .inp{ height:28px }                      /* 기존 높이 대비 컴팩트 */
-  .dim .inp{ width:74px; padding:6px 8px } /* 장/폭/고 입력 폭 */
-
-  /* 라벨 위, 입력 아래(세로 쌓기) */
-  .row.stack{ grid-template-columns:1fr; align-items:flex-start }
-  .row.stack > label{ margin-bottom:4px }
-
-  /* 규격: 섹션 폭 안에서 자동 축소/줄바꿈 */
   :root{
-    --dimw-min: 60px;   /* 너무 좁아지지 않게 최소 폭 */
-    --dimw-max: 74px;   /* 보통 상태 폭 */
+    --ctl-h:28px; --ctl-r:6px; --ctl-fs:13px;
+    --bd:#e5e7eb; --fg:#111; --mut:#6b7280; --bg:#f5f6f8; --card:#fff; --primary:#2563eb;
+    --dimw-min:60px; --dimw-max:74px; --selectW:180px;
   }
-  .row.stack{ grid-template-columns: 1fr; align-items:flex-start } /* 라벨 위, 입력 아래 */
-  #prodForm .dim-group{
-    display:flex; align-items:center; gap:6px;
-    flex-wrap:wrap;           /* 넘치면 다음 줄로 */
-    max-width:100%;
-  }
-  .dim .inp{
-    width:clamp(var(--dimw-min), 8vw, var(--dimw-max)); /* 화면/섹션 폭에 따라 유연하게 */
-    padding:6px 8px;
-  }
-
-  /* 용지 정보 3칸: 섹션 폭 안에서 동일 높이/폭 */
-  .line3{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; align-items:start }
-  .line3 .cell{ min-width:0 }         /* 그리드 셀 내부 넘침 방지 */
-  .line3 .cell .sel{ width:100%; min-width:0 } /* 셀 안에서 꽉 차되 넘치지 않게 */
-  .line3 .cell .btn{ width:32px; padding:0 }
-  /* 없음 + 셀렉트 + + 버튼을 셀 폭 안에 정렬 */
-  .line3 .cell .nowrap{ display:grid; grid-template-columns:auto 1fr auto; gap:6px; align-items:center; white-space:normal }
-
-  /* 규격: 라벨 아래 한 줄, 절대 줄바꿈 금지 */
-  .dim-compact{ display:flex; align-items:center; gap:8px; white-space:nowrap; flex-wrap:nowrap }
-  .dim-compact .inp{ width:64px; height:26px; padding:4px 6px; font-size:12px } /* 더 작게 */
-  .dim-compact .unit{ font-size:12px; color:#6b7280 }
-  .dim-compact .sep{ margin:0 6px; color:#9aa1a9; font-weight:700 }
-
-  /* 용지/합지 셀렉트 너비 동일화 */
-  :root { --selectW: 180px; } /* 필요시 숫자만 조정 */
-  #prodPaperType,
-  #prodLaminateType {
-    width: var(--selectW);
-    min-width: var(--selectW);
-    max-width: var(--selectW);
-  }
-  /* + 버튼도 통일(옵션) */
-  #btnAddPaper,
-  #btnAddLaminate { width: 32px; padding: 0; }
+  *{box-sizing:border-box}
+  body{margin:0;padding-top:60px;background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",Arial,sans-serif}
+  
+  .container{max-width:1400px;margin:0 auto;padding:20px}
+  h2{margin:0 0 16px;font-size:24px;font-weight:800}
+  
+  .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:16px}
+  
+  .btn{height:var(--ctl-h);padding:0 12px;font-size:var(--ctl-fs);border-radius:var(--ctl-r);border:1px solid var(--bd);background:#fff;cursor:pointer;font-weight:500}
+  .btn:hover{background:#f9fafb}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn.primary:hover{background:#1d4ed8}
+  
+  .grid{display:grid;gap:16px}
+  .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media(max-width:1100px){.grid.cols-3,.grid.cols-2{grid-template-columns:1fr}}
+  
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+  .card-title{font-size:16px;font-weight:700;margin-bottom:16px;color:var(--fg)}
+  
+  .form-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+  .form-row label{min-width:90px;font-weight:500;font-size:var(--ctl-fs)}
+  .form-row .field{flex:1;display:flex;gap:8px;align-items:center}
+  
+  .inp,.sel,textarea{height:var(--ctl-h);border:1px solid var(--bd);border-radius:var(--ctl-r);background:#fff;font-size:var(--ctl-fs);padding:0 10px;transition:border-color 0.2s}
+  .inp:focus,.sel:focus,textarea:focus{outline:none;border-color:var(--primary)}
+  textarea{height:auto;padding:8px 10px;resize:vertical}
+  
+  .checkbox-group{display:flex;gap:16px;flex-wrap:wrap}
+  .checkbox-group label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+  
+  .radio-group{display:flex;gap:12px}
+  .radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;padding:6px 12px;border:1px solid var(--bd);border-radius:var(--ctl-r);background:#fff;transition:all 0.2s}
+  .radio-group label:hover{background:#f9fafb}
+  .radio-group input[type="radio"]{cursor:pointer}
+  .radio-group input[type="radio"]:checked + span{font-weight:600;color:var(--primary)}
+  .radio-group label:has(input:checked){background:#eff6ff;border-color:var(--primary)}
+  
+  .process-detail-section{margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb}
+  .process-item{margin-bottom:16px;padding:12px;background:#f9fafb;border-radius:8px}
+  .process-item-title{font-weight:600;color:var(--primary);margin-bottom:8px}
+  
+  ul.summary-list{list-style:none;padding:0;margin:0}
+  ul.summary-list li{padding:10px 12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:8px;background:#fff;font-size:14px}
+  ul.summary-list li.empty{color:var(--mut);font-style:italic}
+  
+  .dim-group{display:flex;gap:8px;align-items:center}
+  .dim-input{position:relative;display:inline-flex;align-items:center}
+  .dim-input input{width:70px;padding-right:30px}
+  .dim-input .unit{position:absolute;right:10px;color:var(--mut);font-size:12px;pointer-events:none}
+  
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+  .modal.show{display:flex}
+  .modal .panel{background:#fff;border-radius:12px;width:min(600px,100%);padding:24px;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
+  .modal .panel h3{margin:0 0 16px;font-size:18px}
+  
+  #vendorDropdown{position:absolute;left:0;right:60px;top:100%;margin-top:4px;z-index:60;background:#fff;border:1px solid var(--bd);border-radius:8px;max-height:280px;overflow:auto;box-shadow:0 4px 12px rgba(0,0,0,0.1);display:none}
+  #vendorDropdown.show{display:block}
+  .vendor-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid #f3f4f6}
+  .vendor-item:hover{background:#f9fafb}
+  .vendor-item:last-child{border-bottom:none}
+  
+  .file-upload-area{border:2px dashed var(--bd);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s}
+  .file-upload-area:hover{border-color:var(--primary);background:#f9fafb}
+  .file-upload-area.dragover{border-color:var(--primary);background:#eff6ff}
+  .file-list{margin-top:12px}
+  .file-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f9fafb;border-radius:6px;margin-bottom:6px}
+  .file-item-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file-item-remove{color:#ef4444;cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
   </style>
 </head>
 <body>
@@ -151,191 +89,801 @@
   <main class="container">
     <div class="topbar">
       <h2>제품 등록</h2>
-      <div class="row-inline">
-        <button type="button" id="clearProducts" class="btn">전체삭제</button>
-        <button form="prodForm" type="submit" class="btn primary">등록</button>
+      <div style="display:flex;gap:8px">
+        <button type="button" id="btnClearAll" class="btn">전체삭제</button>
+        <button type="submit" form="productForm" class="btn primary">등록</button>
       </div>
     </div>
 
-    <!-- 상단 3열 -->
-    <div class="grid top3">
-      <!-- 기본 정보 -->
-      <form id="prodForm" class="card" style="margin:0">
-        <div class="title">기본 정보</div>
-
-        <div class="row">
-          <label>거래처</label>
-          <div class="nowrap" style="position:relative; width:100%">
-            <input id="prodVendor" class="inp" placeholder="거래처 검색 또는 입력" autocomplete="off">
-            <button type="button" id="btnVendorManage" class="btn">선택</button>
-            <!-- 자동완성 드롭다운 -->
-            <div id="vendorDropdown" style="display:none; position:absolute; left:8px; right:8px; top:44px; z-index:60; background:#fff; border:1px solid #eef2f5; border-radius:8px; max-height:260px; overflow:auto; box-shadow:0 6px 18px rgba(15,23,42,0.08)"></div>
+    <form id="productForm">
+      <div class="grid cols-3">
+        <!-- 기본 정보 -->
+        <div class="card">
+          <div class="card-title">기본 정보</div>
+          <div class="form-row">
+            <label>거래처</label>
+            <div class="field" style="position:relative">
+              <input id="prodVendor" class="inp" placeholder="거래처 검색 또는 입력" autocomplete="off" style="flex:1">
+              <button type="button" id="btnVendorModal" class="btn">선택</button>
+              <div id="vendorDropdown"></div>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>제품명</label>
+            <div class="field"><input id="prodName" class="inp" placeholder="제품명" required></div>
+          </div>
+          <div class="form-row">
+            <label>규격</label>
+            <div class="field dim-group">
+              <div class="dim-input"><input id="prodL" class="inp" type="number" placeholder="장"><span class="unit">mm</span></div>
+              <span>×</span>
+              <div class="dim-input"><input id="prodW" class="inp" type="number" placeholder="폭"><span class="unit">mm</span></div>
+              <span>×</span>
+              <div class="dim-input"><input id="prodH" class="inp" type="number" placeholder="고"><span class="unit">mm</span></div>
+            </div>
           </div>
         </div>
 
-        <div class="row">
-          <label>제품명</label>
-          <input id="prodName" class="inp" placeholder="제품명">
-        </div>
-
-        <div class="row stack">
-          <label>규격</label>
-          <div class="dim-compact">
-            <input id="prodLength" class="inp" type="number" placeholder="장"><span class="unit">mm</span>
-            <span class="sep">×</span>
-            <input id="prodWidth"  class="inp" type="number" placeholder="폭"><span class="unit">mm</span>
-            <span class="sep">×</span>
-            <input id="prodHeight" class="inp" type="number" placeholder="고"><span class="unit">mm</span>
+        <!-- 용지 정보 -->
+        <div class="card">
+          <div class="card-title">용지 정보</div>
+          <div class="form-row">
+            <label>용지</label>
+            <div class="field">
+              <select id="prodPaper" class="sel" style="flex:1"><option value="">선택</option></select>
+              <button type="button" id="btnAddPaper" class="btn">+</button>
+            </div>
           </div>
-        </div>
-      </form>
-
-      <!-- 용지 정보 -->
-      <section class="card">
-        <div class="title">용지 정보</div>
-
-        <div class="row">
-          <label>용지</label>
-          <div class="row-inline" style="flex:1">
-            <select id="prodPaperType" class="sel" style="min-width:160px"><option value="">용지 선택</option></select>
-            <button type="button" id="btnAddPaper" class="btn">+</button>
+          <div class="form-row">
+            <label>용지 크기</label>
+            <div class="field dim-group">
+              <div class="dim-input"><input id="paperW" class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
+              <span>×</span>
+              <div class="dim-input"><input id="paperH" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+            </div>
           </div>
-        </div>
-
-        <div class="row">
-          <label>용지 크기</label>
-          <div class="dim-group">
-            <div class="dim"><input id="prodPaperWidth"  class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
-            <span class="sep">×</span>
-            <div class="dim"><input id="prodPaperHeight" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+          <div class="form-row">
+            <label>합지</label>
+            <div class="field"><label><input type="checkbox" id="noLaminate"> 없음</label></div>
           </div>
-        </div>
-
-        <div class="row">
-          <label>합지</label>
-          <div class="row-inline">
-            <label class="row-inline"><input type="checkbox" id="lamNone" style="margin-right:6px">없음</label>
+          <div class="form-row" id="laminateRow">
+            <label>합지 원단</label>
+            <div class="field">
+              <select id="prodLaminate" class="sel" style="flex:1"><option value="">선택</option></select>
+              <button type="button" id="btnAddLaminate" class="btn">+</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>원단 크기</label>
+            <div class="field dim-group">
+              <div class="dim-input"><input id="lamW" class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
+              <span>×</span>
+              <div class="dim-input"><input id="lamH" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+            </div>
           </div>
         </div>
 
-        <div class="row" id="laminateRow">
-          <label>합지 원단</label>
-          <div class="row-inline" style="flex:1">
-            <select id="prodLaminateType" class="sel" style="min-width:140px"><option value="">합지 선택</option></select>
-            <button type="button" id="btnAddLaminate" class="btn">+</button>
+        <!-- 추가 정보 -->
+        <div class="card">
+          <div class="card-title">추가 정보</div>
+          <div class="form-row">
+            <label>단가</label>
+            <div class="field"><input id="prodPrice" class="inp" type="number" placeholder="단가" style="width:140px"> 원</div>
+          </div>
+          <div class="form-row">
+            <label>절수</label>
+            <div class="field"><input id="prodCut" class="inp" type="number" placeholder="절수" style="width:100px"></div>
+          </div>
+          <div class="form-row">
+            <label>칼규격</label>
+            <div class="field dim-group">
+              <div class="dim-input"><input id="knifeW" class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
+              <span>×</span>
+              <div class="dim-input"><input id="knifeH" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+            </div>
+          </div>
+          <div class="form-row" style="align-items:flex-start">
+            <label>배송지</label>
+            <div class="field"><textarea id="prodShipping" class="inp" rows="2" placeholder="배송지 주소"></textarea></div>
+          </div>
+          <div class="form-row">
+            <label>담당자</label>
+            <div class="field"><input id="prodManager" class="inp" placeholder="담당자명" style="width:140px"></div>
+          </div>
+          <div class="form-row">
+            <label>휴대폰</label>
+            <div class="field"><input id="prodPhone" class="inp" placeholder="010-0000-0000" style="width:160px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 공정 정보, 공정 요약, 첨부파일 -->
+      <div class="grid cols-3" style="margin-top:16px">
+        <div class="card">
+          <div class="card-title">공정 정보</div>
+          <div class="form-row" style="align-items:flex-start">
+            <label>공정 선택</label>
+            <div class="field checkbox-group">
+              <label><input type="checkbox" name="process" value="인쇄"> 인쇄</label>
+              <label><input type="checkbox" name="process" value="코팅"> 코팅</label>
+              <label><input type="checkbox" name="process" value="금박"> 금박</label>
+              <label><input type="checkbox" name="process" value="형압"> 형압</label>
+              <label><input type="checkbox" name="process" value="합지"> 합지</label>
+              <label><input type="checkbox" name="process" value="톰슨"> 톰슨</label>
+              <label><input type="checkbox" name="process" value="접착"> 접착</label>
+            </div>
+          </div>
+          <div id="processDetailArea" class="process-detail-section" style="display:none"></div>
+          <div style="display:flex;justify-content:flex-end;margin-top:16px;padding-top:16px;border-top:1px solid #e5e7eb">
+            <button type="button" id="btnRegisterProcess" class="btn primary">등록</button>
           </div>
         </div>
 
-        <div class="row">
-          <label>원단 크기</label>
-          <div class="dim-group">
-            <div class="dim"><input id="prodLamWidth"  class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
-            <span class="sep">×</span>
-            <div class="dim"><input id="prodLamHeight" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
+        <div class="card">
+          <div class="card-title">공정 요약</div>
+          <ul id="processSummary" class="summary-list">
+            <li class="empty">선택된 공정이 없습니다</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-title">첨부파일</div>
+          <input type="file" id="fileInput" multiple style="display:none">
+          <div class="file-upload-area" id="fileUploadArea">
+            <div style="color:var(--mut);margin-bottom:8px">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 8px">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <div style="font-size:14px;color:var(--fg);margin-bottom:4px">파일을 드래그하거나 클릭하여 업로드</div>
+            <div style="font-size:12px;color:var(--mut)">PDF, JPG, PNG 등 모든 파일 형식 지원</div>
           </div>
+          <div class="file-list" id="fileList"></div>
         </div>
-      </section>
-
-      <!-- 추가정보 -->
-      <section class="card">
-        <div class="title">추가정보</div>
-
-        <div class="row">
-          <label>단가</label>
-          <div class="nowrap">
-            <input id="prodPrice" class="inp" placeholder="숫자" style="width:140px">
-            <span class="mini">원</span>
-          </div>
-        </div>
-
-        <div class="row">
-          <label>절수</label>
-          <input id="prodCutCount" class="inp" type="number" placeholder="절수" style="width:120px">
-        </div>
-
-        <div class="row">
-          <label>칼규격</label>
-          <div class="dim-group">
-            <div class="dim"><input id="prodKnifeWidth"  class="inp" type="number" placeholder="가로"><span class="unit">mm</span></div>
-            <span class="sep">×</span>
-            <div class="dim"><input id="prodKnifeHeight" class="inp" type="number" placeholder="세로"><span class="unit">mm</span></div>
-          </div>
-        </div>
-
-        <div class="row">
-          <label>배송지</label>
-          <!-- 한 줄 → 2줄로 변경 -->
-          <textarea id="prodShipping" class="inp" rows="2"
-            placeholder="배송지 입력(상세 주소 포함)"
-            style="height:calc(var(--ctl-h) * 2 + 8px)"></textarea>
-        </div>
-
-        <!-- 담당자: 휴대폰을 이름 아래로 분리 -->
-        <div class="row">
-          <label>담당자</label>
-          <input id="prodManager" class="inp" placeholder="이름" style="width:140px">
-        </div>
-        <div class="row">
-          <label>휴대폰</label>
-          <input id="prodManagerPhone" class="inp" placeholder="010-0000-0000" style="width:180px">
-        </div>
-      </section>
-    </div>
-
-    <!-- 하단 2열 -->
-    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
-      <!-- 공정정보 -->
-      <section class="card" id="processSection">
-        <div class="title">공정정보</div>
-        <div class="row" style="grid-template-columns:96px 1fr">
-          <label>공정 선택</label>
-          <div class="row-inline" style="flex-wrap:wrap">
-            <label><input type="checkbox" name="process" value="인쇄"> 인쇄</label>
-            <label><input type="checkbox" name="process" value="코팅"> 코팅</label>
-            <label><input type="checkbox" name="process" value="금박"> 금박</label>
-            <label><input type="checkbox" name="process" value="형압"> 형압</label>
-            <label><input type="checkbox" name="process" value="합지"> 합지</label>
-            <label><input type="checkbox" name="process" value="톰슨"> 톰슨</label>
-            <label><input type="checkbox" name="process" value="접착"> 접착</label>
-          </div>
-        </div>
-
-        <div class="row">
-          <label>상세</label>
-          <div id="processDetail" style="display:none"></div>
-        </div>
-      </section>
-
-      <!-- 공정 요약 -->
-      <section class="card">
-        <div class="title">공정 요약</div>
-        <ul id="processSummaryList" class="clean">
-          <li class="mini">등록된 공정이 없습니다.</li>
-        </ul>
-      </section>
-    </div>
+      </div>
+    </form>
   </main>
 
-  <!-- 거래처 선택 모달 -->
-  <div id="vendorModal" class="modal" aria-hidden="true">
+  <!-- 거래처 모달 -->
+  <div id="vendorModal" class="modal">
     <div class="panel">
-      <div class="row">
+      <h3>거래처 관리</h3>
+      <div class="form-row">
         <label>검색</label>
-        <input id="vendorSearch" class="inp" placeholder="거래처 검색">
+        <div class="field"><input id="vendorSearch" class="inp" placeholder="거래처명 검색"></div>
       </div>
-      <div id="vendorListArea" style="max-height:260px;overflow:auto;border:1px solid #eef1f4;border-radius:8px;padding:8px"></div>
-      <div class="row-inline" style="justify-content:flex-end;margin-top:10px;gap:8px">
+      <div id="vendorList" style="max-height:300px;overflow:auto;border:1px solid var(--bd);border-radius:8px;margin:12px 0"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
         <button type="button" id="btnVendorAdd" class="btn">추가</button>
-        <button type="button" id="btnVendorUpdate" class="btn">수정</button>
-        <button type="button" id="btnVendorDelete" class="btn">삭제</button>
-        <div style="flex:1"></div>
-        <button type="button" id="btnVendorComplete" class="btn primary">완료</button>
-        <button type="button" id="btnVendorClose" class="btn">닫기</button>
+        <button type="button" id="btnVendorClose" class="btn primary">닫기</button>
       </div>
     </div>
   </div>
 
   <script src="assets/nav.js"></script>
-  <script defer src="assets/product-register.js"></script>
+  <script src="assets/product-register.js"></script>
+  <script>
+  // --- 파일 업로드 처리 ---
+  (function fileUploadModule(){
+    const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('fileUploadArea');
+    const fileList = document.getElementById('fileList');
+    let uploadedFiles = [];
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', function(e){
+      handleFiles(Array.from(e.target.files));
+    });
+
+    uploadArea.addEventListener('dragover', function(e){
+      e.preventDefault();
+      this.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e){
+      e.preventDefault();
+      this.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e){
+      e.preventDefault();
+      this.classList.remove('dragover');
+      handleFiles(Array.from(e.dataTransfer.files));
+    });
+
+    function handleFiles(files){
+      files.forEach(file => {
+        if(!uploadedFiles.find(f => f.name === file.name && f.size === file.size)){
+          uploadedFiles.push(file);
+        }
+      });
+      renderFileList();
+    }
+
+    function renderFileList(){
+      if(uploadedFiles.length === 0){
+        fileList.innerHTML = '';
+        return;
+      }
+
+      fileList.innerHTML = uploadedFiles.map((file, index) => `
+        <div class="file-item">
+          <span class="file-item-name">${file.name} (${formatFileSize(file.size)})</span>
+          <span class="file-item-remove" data-index="${index}">×</span>
+        </div>
+      `).join('');
+
+      fileList.querySelectorAll('.file-item-remove').forEach(btn => {
+        btn.addEventListener('click', function(){
+          const index = parseInt(this.dataset.index);
+          uploadedFiles.splice(index, 1);
+          renderFileList();
+        });
+      });
+    }
+
+    function formatFileSize(bytes){
+      if(bytes < 1024) return bytes + ' B';
+      if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+      return (bytes/(1024*1024)).toFixed(1) + ' MB';
+    }
+
+    window.getUploadedFiles = () => uploadedFiles;
+  })();
+
+  // --- 공정 선택 및 상세 입력 처리 ---
+  (function processModule(){
+    const processCheckboxes = document.querySelectorAll('input[name="process"]');
+    const detailArea = document.getElementById('processDetailArea');
+    const summaryList = document.getElementById('processSummary');
+    const noLaminateCheckbox = document.getElementById('noLaminate');
+    const btnRegisterProcess = document.getElementById('btnRegisterProcess');
+    
+    let autoProcesses = new Set(); // 자동 추가되는 공정 (합지, 톰슨)
+    let registeredProcesses = new Map(); // 등록된 공정들 (name -> data)
+    
+    // 공정 순서 정의
+    const processOrder = ['인쇄', '코팅', '금박', '형압', '합지', '톰슨', '접착'];
+
+    const processTemplates = {
+      '인쇄': `
+        <div class="form-row">
+          <label>면 선택</label>
+          <div class="field radio-group">
+            <label>
+              <input type="radio" name="인쇄_면" value="전면" checked>
+              <span>전면</span>
+            </label>
+            <label>
+              <input type="radio" name="인쇄_면" value="후면">
+              <span>후면</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>인쇄 종류</label>
+          <div class="field">
+            <select class="sel" name="인쇄_종류" id="printType">
+              <option value="">선택</option>
+              <option value="옵셋인쇄" selected>옵셋인쇄</option>
+              <option value="UV인쇄">UV인쇄</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="printEtcRow" style="display:none">
+          <label>기타 내용</label>
+          <div class="field">
+            <input class="inp" name="인쇄_기타" placeholder="기타 인쇄 종류 입력">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>기본인쇄도수</label>
+          <div class="field">
+            <select class="sel" name="인쇄_기본도수" style="width:100px">
+              <option value="0">0도</option>
+              <option value="1">1도</option>
+              <option value="2">2도</option>
+              <option value="3">3도</option>
+              <option value="4" selected>4도</option>
+              <option value="5">5도</option>
+              <option value="6">6도</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>별색인쇄도수</label>
+          <div class="field">
+            <select class="sel" name="인쇄_별색도수" style="width:100px">
+              <option value="0" selected>0도</option>
+              <option value="1">1도</option>
+              <option value="2">2도</option>
+              <option value="3">3도</option>
+              <option value="4">4도</option>
+              <option value="5">5도</option>
+              <option value="6">6도</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>외주</label>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" name="인쇄_외주" id="printOutsource"> 외주 처리
+            </label>
+          </div>
+        </div>
+        <div class="form-row" id="printOutsourceRow" style="display:none">
+          <label>외주 업체명</label>
+          <div class="field">
+            <input class="inp" name="인쇄_외주업체" placeholder="외주 업체명 입력">
+          </div>
+        </div>
+      `,
+      '코팅': `
+        <div class="form-row">
+          <label>면 선택</label>
+          <div class="field radio-group">
+            <label>
+              <input type="radio" name="코팅_면" value="전면" checked>
+              <span>전면</span>
+            </label>
+            <label>
+              <input type="radio" name="코팅_면" value="후면">
+              <span>후면</span>
+            </label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>종류</label>
+          <div class="field">
+            <select class="sel" name="코팅_종류" id="coatingType">
+              <option value="">선택</option>
+              <option value="무광CR">무광 CR</option>
+              <option value="유광CR">유광 CR</option>
+              <option value="무광라미">무광라미</option>
+              <option value="유광라미">유광라미</option>
+              <option value="실크">실크</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row" id="coatingEtcRow" style="display:none">
+          <label>기타 내용</label>
+          <div class="field">
+            <input class="inp" name="코팅_기타" placeholder="기타 코팅 종류 입력">
+          </div>
+        </div>
+        <div class="form-row" id="coatingSilkRow" style="display:none">
+          <label>실크 크기</label>
+          <div class="field dim-group">
+            <div class="dim-input"><input class="inp" name="코팅_실크가로" type="number" placeholder="가로"><span class="unit">mm</span></div>
+            <span>×</span>
+            <div class="dim-input"><input class="inp" name="코팅_실크세로" type="number" placeholder="세로"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>외주</label>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" name="코팅_외주" id="coatingOutsource"> 외주 처리
+            </label>
+          </div>
+        </div>
+        <div class="form-row" id="coatingOutsourceRow" style="display:none">
+          <label>외주 업체명</label>
+          <div class="field">
+            <input class="inp" name="코팅_외주업체" placeholder="외주 업체명 입력">
+          </div>
+        </div>
+      `,
+      '금박': `
+        <div class="form-row">
+          <label>색상</label>
+          <div class="field"><input class="inp" name="금박_색상" placeholder="금색/은색 등"></div>
+        </div>
+        <div class="form-row">
+          <label>면적</label>
+          <div class="field"><input class="inp" name="금박_면적" placeholder="예: 50x50mm"></div>
+        </div>
+      `,
+      '형압': `
+        <div class="form-row">
+          <label>깊이</label>
+          <div class="field"><input class="inp" name="형압_깊이" placeholder="예: 0.5mm"></div>
+        </div>
+      `,
+      '접착': `
+        <div class="form-row">
+          <label>접착 종류</label>
+          <div class="field">
+            <select class="sel" name="접착_종류" id="adhesiveType">
+              <option value="">선택</option>
+              <option value="1면접착">1면접착</option>
+              <option value="2면접착">2면접착</option>
+              <option value="3면접착">3면접착</option>
+              <option value="4면접착">4면접착</option>
+              <option value="5면접착">5면접착</option>
+              <option value="6면접착">6면접착</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>창문접착</label>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" name="창문접착" id="windowAdhesive"> 창문접착 포함
+            </label>
+          </div>
+        </div>
+        <div class="form-row" id="windowSizeRow" style="display:none">
+          <label>창문 크기</label>
+          <div class="field dim-group">
+            <div class="dim-input"><input class="inp" name="창문접착_가로" type="number" placeholder="가로"><span class="unit">mm</span></div>
+            <span>×</span>
+            <div class="dim-input"><input class="inp" name="창문접착_세로" type="number" placeholder="세로"><span class="unit">mm</span></div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>외주</label>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" name="접착_외주" id="adhesiveOutsource"> 외주 처리
+            </label>
+          </div>
+        </div>
+        <div class="form-row" id="adhesiveOutsourceRow" style="display:none">
+          <label>외주 업체명</label>
+          <div class="field">
+            <input class="inp" name="접착_외주업체" placeholder="외주 업체명 입력">
+          </div>
+        </div>
+      `
+    };
+
+    function updateProcessUI(){
+      const selected = Array.from(processCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+      
+      // 모든 공정 수집 (등록된 공정에서 공정명만 추출)
+      const registeredProcessNames = new Set();
+      registeredProcesses.forEach((dataArray, procName) => {
+        registeredProcessNames.add(procName);
+      });
+      
+      const allProcessNames = new Set([...selected, ...autoProcesses, ...registeredProcessNames]);
+
+      if(allProcessNames.size === 0){
+        detailArea.style.display = 'none';
+        detailArea.innerHTML = '';
+        summaryList.innerHTML = '<li class="empty">선택된 공정이 없습니다</li>';
+        return;
+      }
+
+      // 상세 입력 영역 (선택된 공정만)
+      detailArea.style.display = 'block';
+      detailArea.innerHTML = '';
+      selected.filter(proc => !autoProcesses.has(proc)).forEach(proc => {
+        const item = document.createElement('div');
+        item.className = 'process-item';
+        item.innerHTML = `
+          <div class="process-item-title">${proc}</div>
+          ${processTemplates[proc] || '<div class="form-row"><label>메모</label><div class="field"><input class="inp" placeholder="메모"></div></div>'}
+        `;
+        detailArea.appendChild(item);
+        
+        if(proc === '코팅'){
+          const coatingSelect = item.querySelector('#coatingType');
+          const etcRow = item.querySelector('#coatingEtcRow');
+          const silkRow = item.querySelector('#coatingSilkRow');
+          
+          if(coatingSelect && etcRow && silkRow){
+            coatingSelect.addEventListener('change', function(){
+              etcRow.style.display = this.value === '기타' ? 'flex' : 'none';
+              silkRow.style.display = this.value === '실크' ? 'flex' : 'none';
+            });
+          }
+          
+          const coatingOutsource = item.querySelector('#coatingOutsource');
+          const coatingOutsourceRow = item.querySelector('#coatingOutsourceRow');
+          if(coatingOutsource && coatingOutsourceRow){
+            coatingOutsource.addEventListener('change', function(){
+              coatingOutsourceRow.style.display = this.checked ? 'flex' : 'none';
+            });
+          }
+        }
+        
+        if(proc === '인쇄'){
+          const printSelect = item.querySelector('#printType');
+          const etcRow = item.querySelector('#printEtcRow');
+          if(printSelect && etcRow){
+            printSelect.addEventListener('change', function(){
+              etcRow.style.display = this.value === '기타' ? 'flex' : 'none';
+            });
+          }
+          
+          const printOutsource = item.querySelector('#printOutsource');
+          const printOutsourceRow = item.querySelector('#printOutsourceRow');
+          if(printOutsource && printOutsourceRow){
+            printOutsource.addEventListener('change', function(){
+              printOutsourceRow.style.display = this.checked ? 'flex' : 'none';
+            });
+          }
+        }
+        
+        if(proc === '접착'){
+          const windowAdhesive = item.querySelector('#windowAdhesive');
+          const windowSizeRow = item.querySelector('#windowSizeRow');
+          
+          if(windowAdhesive && windowSizeRow){
+            windowAdhesive.addEventListener('change', function(){
+              windowSizeRow.style.display = this.checked ? 'flex' : 'none';
+            });
+          }
+          
+          const adhesiveOutsource = item.querySelector('#adhesiveOutsource');
+          const adhesiveOutsourceRow = item.querySelector('#adhesiveOutsourceRow');
+          if(adhesiveOutsource && adhesiveOutsourceRow){
+            adhesiveOutsource.addEventListener('change', function(){
+              adhesiveOutsourceRow.style.display = this.checked ? 'flex' : 'none';
+            });
+          }
+        }
+      });
+
+      // 공정 요약 - 정의된 순서대로 정렬
+      const sortedProcesses = processOrder.filter(p => allProcessNames.has(p));
+      
+      summaryList.innerHTML = sortedProcesses.map(processName => {
+        let displayItems = [];
+        
+        // 등록된 공정 확인
+        if(registeredProcesses.has(processName)){
+          const dataArray = registeredProcesses.get(processName);
+          dataArray.forEach(data => {
+            let displayText = `<strong>${processName}</strong>`;
+            if(data.side) displayText += ` (${data.side})`;
+            if(data.details && data.details.length > 0){
+              displayText += ` - ${data.details.join(', ')}`;
+            }
+            displayItems.push({
+              text: displayText,
+              style: 'background:#dcfce7;border-color:#bbf7d0',
+              side: data.side
+            });
+          });
+        } else {
+          displayItems.push({
+            text: `<strong>${processName}</strong>`,
+            style: '',
+            side: null
+          });
+        }
+        
+        return displayItems.map((item, idx) => 
+          `<li data-process="${processName}" data-index="${idx}"${item.style ? ` style="${item.style}"` : ''}>${item.text}</li>`
+        ).join('');
+      }).join('');
+      
+      // 우클릭 삭제 이벤트
+      summaryList.querySelectorAll('li[data-process]').forEach(li => {
+        li.addEventListener('contextmenu', function(e){
+          e.preventDefault();
+          const process = this.dataset.process;
+          const index = parseInt(this.dataset.index);
+          
+          if(registeredProcesses.has(process)){
+            const dataArray = registeredProcesses.get(process);
+            if(dataArray.length > 1){
+              // 여러 항목 중 하나만 삭제
+              if(confirm(`"${process}" 공정의 해당 항목을 삭제하시겠습니까?`)){
+                dataArray.splice(index, 1);
+                if(dataArray.length === 0){
+                  registeredProcesses.delete(process);
+                }
+                updateProcessUI();
+              }
+            } else {
+              // 마지막 항목 삭제
+              if(confirm(`"${process}" 공정을 삭제하시겠습니까?`)){
+                registeredProcesses.delete(process);
+                autoProcesses.delete(process);
+                processCheckboxes.forEach(cb => {
+                  if(cb.value === process) cb.checked = false;
+                });
+                if(process === '합지' && noLaminateCheckbox){
+                  noLaminateCheckbox.checked = true;
+                }
+                updateProcessUI();
+              }
+            }
+          } else {
+            if(confirm(`"${process}" 공정을 삭제하시겠습니까?`)){
+              autoProcesses.delete(process);
+              registeredProcesses.delete(process);
+              processCheckboxes.forEach(cb => {
+                if(cb.value === process) cb.checked = false;
+              });
+              if(process === '합지' && noLaminateCheckbox){
+                noLaminateCheckbox.checked = true;
+              }
+              updateProcessUI();
+            }
+          }
+        });
+        
+        li.style.cursor = 'context-menu';
+        li.title = '우클릭하여 삭제';
+      });
+    }
+
+    // 등록 버튼 클릭
+    btnRegisterProcess.addEventListener('click', function(){
+      const selected = Array.from(processCheckboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+      
+      if(selected.length === 0){
+        alert('등록할 공정을 선택해주세요.');
+        return;
+      }
+      
+      // 선택된 공정의 상세 정보 수집
+      let validationError = false;
+      
+      selected.forEach(proc => {
+        const processData = { name: proc, details: [], side: null };
+        
+        const processItem = detailArea.querySelector(`.process-item`);
+        if(processItem){
+          if(proc === '인쇄'){
+            const side = processItem.querySelector('input[name="인쇄_면"]:checked')?.value;
+            const printType = processItem.querySelector('#printType')?.value;
+            const printEtc = processItem.querySelector('input[name="인쇄_기타"]')?.value;
+            const basicDegree = parseInt(processItem.querySelector('select[name="인쇄_기본도수"]')?.value) || 0;
+            const specialDegree = parseInt(processItem.querySelector('select[name="인쇄_별색도수"]')?.value) || 0;
+            const outsource = processItem.querySelector('#printOutsource')?.checked;
+            const outsourceCompany = processItem.querySelector('input[name="인쇄_외주업체"]')?.value;
+            
+            // 도수 체크
+            const totalDegree = basicDegree + specialDegree;
+            if(totalDegree > 6){
+              alert(`인쇄 도수는 6도를 초과할 수 없습니다.\n현재: 기본 ${basicDegree}도 + 별색 ${specialDegree}도 = 총 ${totalDegree}도\n6도 이하로 조정해주세요.`);
+              validationError = true;
+              return;
+            }
+            
+            processData.side = side;
+            if(printType) processData.details.push(printType === '기타' && printEtc ? printEtc : printType);
+            if(basicDegree !== 0) processData.details.push(`원색 ${basicDegree}도`);
+            if(specialDegree !== 0) processData.details.push(`별색 ${specialDegree}도`);
+            if(outsource && outsourceCompany) processData.details.push(`외주: ${outsourceCompany}`);
+            else if(outsource) processData.details.push('외주');
+          }
+          else if(proc === '코팅'){
+            const side = processItem.querySelector('input[name="코팅_면"]:checked')?.value;
+            const coatingType = processItem.querySelector('#coatingType')?.value;
+            const coatingEtc = processItem.querySelector('input[name="코팅_기타"]')?.value;
+            const silkW = processItem.querySelector('input[name="코팅_실크가로"]')?.value;
+            const silkH = processItem.querySelector('input[name="코팅_실크세로"]')?.value;
+            const outsource = processItem.querySelector('#coatingOutsource')?.checked;
+            const outsourceCompany = processItem.querySelector('input[name="코팅_외주업체"]')?.value;
+            
+            processData.side = side;
+            if(coatingType){
+              if(coatingType === '기타' && coatingEtc){
+                processData.details.push(coatingEtc);
+              } else if(coatingType === '실크' && silkW && silkH){
+                processData.details.push(`실크 ${silkW}×${silkH}mm`);
+              } else {
+                processData.details.push(coatingType);
+              }
+            }
+            if(outsource && outsourceCompany) processData.details.push(`외주: ${outsourceCompany}`);
+            else if(outsource) processData.details.push('외주');
+          }
+          else if(proc === '금박'){
+            const color = processItem.querySelector('input[name="금박_색상"]')?.value;
+            const area = processItem.querySelector('input[name="금박_면적"]')?.value;
+            
+            if(color) processData.details.push(color);
+            if(area) processData.details.push(area);
+          }
+          else if(proc === '형압'){
+            const depth = processItem.querySelector('input[name="형압_깊이"]')?.value;
+            if(depth) processData.details.push(depth);
+          }
+          else if(proc === '접착'){
+            const adhesiveType = processItem.querySelector('#adhesiveType')?.value;
+            const windowCheck = processItem.querySelector('#windowAdhesive')?.checked;
+            const windowW = processItem.querySelector('input[name="창문접착_가로"]')?.value;
+            const windowH = processItem.querySelector('input[name="창문접착_세로"]')?.value;
+            const outsource = processItem.querySelector('#adhesiveOutsource')?.checked;
+            const outsourceCompany = processItem.querySelector('input[name="접착_외주업체"]')?.value;
+            
+            if(adhesiveType) processData.details.push(adhesiveType);
+            if(windowCheck && windowW && windowH) processData.details.push(`창문 ${windowW}×${windowH}mm`);
+            else if(windowCheck) processData.details.push('창문접착');
+            if(outsource && outsourceCompany) processData.details.push(`외주: ${outsourceCompany}`);
+            else if(outsource) processData.details.push('외주');
+          }
+        }
+        
+        if(!validationError){
+          // 배열로 저장 (같은 공정 여러 번 등록 가능)
+          if(!registeredProcesses.has(proc)){
+            registeredProcesses.set(proc, []);
+          }
+          registeredProcesses.get(proc).push(processData);
+        }
+      });
+      
+      // 검증 실패 시 등록 중단
+      if(validationError){
+        return;
+      }
+      
+      // 체크박스 해제
+      processCheckboxes.forEach(cb => {
+        cb.checked = false;
+      });
+      
+      alert('공정이 등록되었습니다.');
+      updateProcessUI();
+    });
+
+    // 합지 없음 체크박스
+    if(noLaminateCheckbox){
+      noLaminateCheckbox.addEventListener('change', function(){
+        if(this.checked){
+          autoProcesses.delete('합지');
+          registeredProcesses.delete('합지');
+        } else {
+          autoProcesses.add('합지');
+        }
+        updateProcessUI();
+      });
+      
+      // 초기 상태: 합지 없음이 체크되어 있지 않으면 합지 추가
+      if(!noLaminateCheckbox.checked){
+        autoProcesses.add('합지');
+      }
+    }
+
+    // 톰슨은 자동 추가하지 않음 (제거)
+    // autoProcesses.add('톰슨');
+
+    // 체크박스 이벤트
+    processCheckboxes.forEach(cb => {
+      cb.addEventListener('change', function(e){
+        const value = this.value;
+        
+        if(value === '합지' || value === '톰슨'){
+          if(this.checked){
+            // 합지나 톰슨 체크 시 등록된 공정으로 추가
+            registeredProcesses.set(value, { name: value, details: [] });
+            this.checked = false;
+            alert(`${value} 공정이 등록되었습니다.`);
+            updateProcessUI();
+          }
+          return;
+        }
+        
+        if(this.checked){
+          processCheckboxes.forEach(other => {
+            if(other !== this) other.checked = false;
+          });
+        }
+        updateProcessUI();
+      });
+    });
+
+    updateProcessUI();
+  })();
+  </script>
 </body>
 </html>

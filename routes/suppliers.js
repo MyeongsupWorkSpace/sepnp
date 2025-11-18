@@ -5,7 +5,7 @@ const db = require('../db'); // 기존 db 모듈( mysql2 pool ) 사용 가정
 // GET /api/suppliers
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT id, name, contact, phone, email, address FROM suppliers ORDER BY name LIMIT 1000');
+    const [rows] = await db.query('SELECT id, name, contact, phone, email FROM suppliers ORDER BY name LIMIT 1000');
     res.json(rows);
   } catch (e) {
     console.error('[suppliers.GET] error:', e);
@@ -42,17 +42,3 @@ router.post('/', async (req, res) => {
 });
 
 module.exports = router;
-
-/*
-CREATE TABLE IF NOT EXISTS suppliers (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(200) NOT NULL,
-  contact VARCHAR(200),
-  phone VARCHAR(50),
-  email VARCHAR(200),
-  address TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY ux_suppliers_name (name)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-*/
