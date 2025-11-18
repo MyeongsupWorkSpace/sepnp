@@ -2,6 +2,8 @@
   "name": "sepmp-server",
   "private": true,
   "scripts": {
+    "prestart": "node scripts/apply-migrations.js",
+    "start": "node server.js",
     "db:migrate": "node scripts/apply-migrations.js"
   },
   "dependencies": {
