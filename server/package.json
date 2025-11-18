@@ -2,9 +2,7 @@
   "name": "sepmp-server",
   "private": true,
   "scripts": {
-    "prestart": "node scripts/apply-schema.js",
-    "start": "node server.js",
-    "db:setup": "node scripts/apply-schema.js"
+    "db:migrate": "node scripts/apply-migrations.js"
   },
   "dependencies": {
     "mysql2": "^3.11.0"
