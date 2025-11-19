@@ -150,51 +150,38 @@
 
   // 배포/로컬 자동 감지
   const isLocal = ['localhost', '127.0.0.1'].includes(location.hostname);
-  const API_BASE = isLocal ? 'http://localhost:3000/api' : `${location.origin}/api`;
+  const API_BASE = `${location.origin}/api`; // 동일 도메인 사용
+  console.log('[API] BASE:', API_BASE);
 
-  // 전역 노출
-  window.API_BASE = API_BASE;
-
-  // fetch 공통 요청 (타임아웃 포함)
   async function request(path, options = {}) {
-    const url = path.startsWith('http') ? path : `${API_BASE}${path}`;
-    const controller = new AbortController();
-    const timeout = options.timeout ?? 15000;
-    const timer = setTimeout(() => controller.abort(), timeout);
-
-    try {
-      const resp = await fetch(url, {
-        headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-        signal: controller.signal,
-        ...options,
-      });
-
-      if (resp.status === 204) return null;
-
-      const isJson = (resp.headers.get('content-type') || '').includes('application/json');
-      const data = isJson ? await resp.json() : await resp.text();
-
-      if (!resp.ok) {
-        const msg = (data && (data.msg || data.error)) || `HTTP ${resp.status}`;
-        throw new Error(msg);
-      }
-      return data;
-    } finally {
-      clearTimeout(timer);
-    }
+    const url = path.startsWith('/') ? API_BASE + path : path;
+    const resp = await fetch(url, {
+      headers: { 'Content-Type': 'application/json', ...(options.headers||{}) },
+      ...options
+    });
+    const isJson = (resp.headers.get('content-type')||'').includes('application/json');
+    const data = isJson ? await resp.json() : await resp.text();
+    if (!resp.ok) throw new Error((data && (data.msg||data.error)) || `HTTP ${resp.status}`);
+    return data;
   }
 
-  // HTTP 메서드 래퍼
-  const HTTP = {
-    get: (p, opt) => request(p, { method: 'GET', ...(opt || {}) }),
-    post: (p, body, opt) => request(p, { method: 'POST', body: JSON.stringify(body), ...(opt || {}) }),
-    put: (p, body, opt) => request(p, { method: 'PUT', body: JSON.stringify(body), ...(opt || {}) }),
-    patch: (p, body, opt) => request(p, { method: 'PATCH', body: JSON.stringify(body), ...(opt || {}) }),
-    delete: (p, opt) => request(p, { method: 'DELETE', ...(opt || {}) }),
+  const API = {
+    postSupplier: (name) => request('/suppliers', {
+      method: 'POST', body: JSON.stringify({ name })
+    }),
+    listSuppliers: (q='') => request(`/suppliers${q?`?q=${encodeURIComponent(q)}`:''}`),
+    // 필요한 다른 엔드포인트 추가 가능
   };
 
-  window.API = { request, HTTP };
-
-  console.log('🔧 API 베이스:', API_BASE);
-  console.log('🌍 환경:', isLocal ? 'Local' : 'Production');
+  window.API = API;
 })();
+
+export async function postSupplier(name) {
+  const res = await fetch('/api/suppliers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name })
+  });
+  if (!res.ok) throw new Error(`suppliers ${res.status}`);
+  return res.json();
+}

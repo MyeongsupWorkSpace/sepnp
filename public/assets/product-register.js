@@ -676,3 +676,21 @@ async function submitProductForm(evt) {
   // 초기 렌더링 보정
   closeDropdown();
 })();
+
+document.addEventListener('DOMContentLoaded', () => {
+  const supplierInput = document.querySelector('#거래처'); // 실제 id 또는 selector 맞게 수정
+  if (supplierInput) {
+    supplierInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        const name = supplierInput.value.trim();
+        if (!name) return;
+        try {
+          await window.API.postSupplier(name);
+          alert('거래처 생성 완료');
+        } catch (err) {
+          alert('거래처 생성 실패: ' + err.message);
+        }
+      }
+    });
+  }
+});
