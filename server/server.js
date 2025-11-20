@@ -9,35 +9,56 @@ app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(morgan('tiny'));
 
-async function initPool(retries = 5) {
+function parseUrl(url) {
+  // mysql://user:pass@host:port/dbname
+  try {
+    const u = new URL(url);
+    return {
+      host: u.hostname,
+      port: +u.port,
+      user: u.username,
+      password: u.password,
+      database: u.pathname.replace('/', '')
+    };
+  } catch { return null; }
+}
+
+const urlCfg = parseUrl(process.env.RAILWAY_DATABASE_URL || '');
+const cfg = {
+  host: process.env.MYSQLHOST || (urlCfg?.host) || 'mysql.railway.internal',
+  port: +(process.env.MYSQLPORT || urlCfg?.port || 3306),
+  user: process.env.MYSQLUSER || (urlCfg?.user) || 'root',
+  password: process.env.MYSQLPASSWORD || (urlCfg?.password),
+  database: process.env.MYSQLDATABASE || (urlCfg?.database) || 'railway'
+};
+
+console.log('[DB CONFIG]', { ...cfg, passwordSet: !!cfg.password });
+
+async function makePool(retries = 5) {
   let attempt = 0;
-  while (true) {
+  while (attempt < retries) {
     attempt++;
     try {
       const pool = mysql.createPool({
-        host: process.env.MYSQLHOST || 'mysql.railway.internal',
-        port: +(process.env.MYSQLPORT || 3306),
-        user: process.env.MYSQLUSER || 'root',
-        password: process.env.MYSQLPASSWORD,
-        database: process.env.MYSQLDATABASE || 'railway',
+        ...cfg,
         waitForConnections: true,
         connectionLimit: 5,
-        connectTimeout: 10000
+        connectTimeout: 15000
       });
       await pool.query('SELECT 1');
-      console.log('DB 연결 성공');
+      console.log('[DB] 연결 성공 attempt', attempt);
       return pool;
     } catch (e) {
-      console.error(`DB 연결 실패(${attempt}): ${e.message}`);
-      if (attempt >= retries) throw e;
-      await new Promise(r => setTimeout(r, attempt * 1000));
+      console.error(`[DB] 연결 실패 attempt ${attempt}:`, e.message);
+      if (attempt === retries) throw e;
+      await new Promise(r => setTimeout(r, attempt * 1500));
     }
   }
 }
 
 let pool;
-initPool().then(p => pool = p).catch(e => {
-  console.error('최종 DB 연결 실패 종료:', e.message);
+makePool().then(p => pool = p).catch(e => {
+  console.error('[DB] 최종 실패 종료:', e.message);
   process.exit(1);
 });
 
@@ -47,18 +68,39 @@ app.get('/api/health', async (_req, res) => {
   catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// 라우트 팩토리들 (필요한 것만)
-function mount(name, file) {
-  const factory = require(path.join(__dirname, '..', 'routes', file));
-  app.use(`/api/${name}`, (req, res, next) => {
-    if (!pool) return res.status(503).json({ message: 'DB not ready' });
-    return factory(pool).handle(req, res, next);
+// 디버그: 현재 변수/접속 테스트
+app.get('/api/dbinfo', async (_req, res) => {
+  res.json({
+    ready: !!pool,
+    cfg: { ...cfg, password: cfg.password ? '***' : null }
   });
-}
+});
 
-mount('suppliers', 'suppliers.js');
-mount('customers', 'customers.js');
-mount('orders', 'orders.js');
+// suppliers 라우트만 우선
+app.post('/api/suppliers', async (req, res, next) => {
+  try {
+    if (!pool) return res.status(503).json({ message: 'DB not ready' });
+    const name = (req.body?.name || '').trim();
+    if (!name) return res.status(400).json({ message: 'name required' });
+    await pool.execute('INSERT INTO suppliers(name) VALUES(?)', [name]);
+    res.status(201).json({ name });
+  } catch (e) {
+    if (e.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'duplicate' });
+    next(e);
+  }
+});
+
+app.get('/api/suppliers', async (req, res, next) => {
+  try {
+    if (!pool) return res.status(503).json({ message: 'DB not ready' });
+    const q = (req.query.q || '').trim();
+    const like = `%${q}%`;
+    const [rows] = await pool.execute(
+      'SELECT id,name,created_at FROM suppliers WHERE name LIKE ? ORDER BY name LIMIT 50', [like]
+    );
+    res.json(rows);
+  } catch (e) { next(e); }
+});
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
