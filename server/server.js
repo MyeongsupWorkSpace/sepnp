@@ -3,71 +3,120 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const mysql = require('mysql2/promise');
+const dns = require('dns');
 
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: true }));
 app.use(morgan('tiny'));
 
-function loadCfg() {
-  let parsed = null;
-  if (process.env.RAILWAY_DATABASE_URL) {
-    try {
-      const u = new URL(process.env.RAILWAY_DATABASE_URL);
-      parsed = {
-        host: u.hostname,
-        port: +u.port,
-        user: u.username,
-        password: u.password,
-        database: u.pathname.slice(1)
-      };
-    } catch {}
+function parseRailwayUrl(url) {
+  try {
+    const u = new URL(url);
+    return {
+      host: u.hostname,
+      port: +u.port,
+      user: u.username,
+      password: u.password,
+      database: u.pathname.slice(1)
+    };
+  } catch {
+    return null;
   }
-  return {
-    host: process.env.MYSQLHOST || parsed?.host,
-    port: +(process.env.MYSQLPORT || parsed?.port || 3306),
-    user: process.env.MYSQLUSER || parsed?.user || 'root',
-    password: process.env.MYSQLPASSWORD || parsed?.password,
-    database: process.env.MYSQLDATABASE || parsed?.database || 'railway'
-  };
 }
 
-const dbCfg = loadCfg();
-console.log('[DB CONFIG]', { ...dbCfg, passwordSet: !!dbCfg.password });
+const urlCfg = parseRailwayUrl(process.env.RAILWAY_DATABASE_URL || '');
+const cfg = {
+  host: process.env.MYSQLHOST || urlCfg?.host,
+  port: +(process.env.MYSQLPORT || urlCfg?.port || 3306),
+  user: process.env.MYSQLUSER || urlCfg?.user || 'root',
+  password: process.env.MYSQLPASSWORD || urlCfg?.password,
+  database: process.env.MYSQLDATABASE || urlCfg?.database || 'railway',
+  ssl: process.env.MYSQLSSL === '1' ? { rejectUnauthorized: false } : undefined
+};
 
-async function connectRetry(max = 6) {
+console.log('[DB CONFIG INIT]', {
+  host: cfg.host,
+  port: cfg.port,
+  user: cfg.user,
+  database: cfg.database,
+  passwordSet: !!cfg.password,
+  sslEnabled: !!cfg.ssl
+});
+
+async function resolveHostDebug(host) {
+  return new Promise(r => {
+    if (!host) return r({ error: 'no-host' });
+    dns.lookup(host, (err, address) => {
+      if (err) return r({ error: err.code || err.message });
+      r({ address });
+    });
+  });
+}
+
+async function connectWithRetry(max = 6) {
   for (let i = 1; i <= max; i++) {
     try {
       const pool = mysql.createPool({
-        ...dbCfg,
+        host: cfg.host,
+        port: cfg.port,
+        user: cfg.user,
+        password: cfg.password,
+        database: cfg.database,
         waitForConnections: true,
         connectionLimit: 5,
-        connectTimeout: 15000
+        connectTimeout: 15000,
+        ssl: cfg.ssl
       });
       await pool.query('SELECT 1');
-      console.log('[DB] 연결 성공 attempt', i);
+      console.log(`[DB] 연결 성공 attempt ${i}`);
       return pool;
     } catch (e) {
-      console.error(`[DB] 연결 실패 attempt ${i}: ${e.code || e.message}`);
+      console.error(`[DB] 연결 실패 attempt ${i}:`, e.code || e.message);
       if (i === max) throw e;
-      await new Promise(r => setTimeout(r, i * 1200));
+      await new Promise(r => setTimeout(r, i * 1500));
     }
   }
 }
 
 let pool;
-connectRetry().then(p => pool = p).catch(e => {
-  console.error('[DB] 최종 실패(계속 재시도 없음):', e.message);
-});
+(async () => {
+  // DNS 먼저
+  const dnsInfo = await resolveHostDebug(cfg.host);
+  console.log('[DNS RESOLVE]', dnsInfo);
+  try {
+    pool = await connectWithRetry();
+  } catch (e) {
+    console.error('[DB] 최종 실패:', e.message);
+    // pool 미생성 상태 유지 (진단 엔드포인트로 상태 확인)
+  }
+})();
 
-app.get('/api/dbinfo', (_req, res) => {
-  res.json({ ready: !!pool, cfg: { ...dbCfg, password: dbCfg.password ? '***' : null } });
+// 진단 엔드포인트
+app.get('/api/dbinfo', async (_req, res) => {
+  const dnsInfo = await resolveHostDebug(cfg.host);
+  res.json({
+    ready: !!pool,
+    cfg: {
+      host: cfg.host,
+      port: cfg.port,
+      user: cfg.user,
+      database: cfg.database,
+      password: cfg.password ? '***' : null,
+      ssl: !!cfg.ssl
+    },
+    dns: dnsInfo
+  });
 });
 
 app.get('/api/health', async (_req, res) => {
   if (!pool) return res.status(503).json({ ok: false, error: 'DB not ready' });
-  try { await pool.query('SELECT 1'); res.json({ ok: true }); }
-  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+  try {
+    await pool.query('SELECT 1');
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
 });
 
 // Suppliers
