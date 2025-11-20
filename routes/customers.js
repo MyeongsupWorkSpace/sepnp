@@ -34,86 +34,31 @@ const db = require('../db');
 module.exports = (pool) => {
   const r = express.Router();
 
-  // 거래처 등록
+  // 고객 생성
   r.post('/', async (req, res, next) => {
     try {
-      const { id, code, name, category, ceo, business_no, tel, fax, email, address, note, status } = req.body;
-      const _id = id || crypto.randomUUID();
-      
-      await pool.execute(
-        `INSERT INTO customers (id, code, name, category, ceo, business_no, tel, fax, email, address, note, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [_id, code, name, category, ceo, business_no, tel, fax, email, address, note, status || 'active']
-      );
-      
-      console.log(`  ✅ 거래처 등록: ${name}`);
-      res.json({ ok: true });
-    } catch (error) {
-      console.error('  ❌ 거래처 등록 오류:', error);
-      res.status(500).json({ ok: false, error: '등록 실패' });
+      const name = (req.body?.name || '').trim();
+      if (!name) return res.status(400).json({ message: 'name required' });
+      await pool.execute('INSERT INTO customers(name) VALUES(?)', [name]);
+      res.status(201).json({ name });
+    } catch (e) {
+      if (e.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'duplicate' });
+      next(e);
     }
   });
 
-  // 거래처 목록 조회
+  // 고객 목록
   r.get('/', async (req, res, next) => {
     try {
-      const { category, status } = req.query;
-      
-      let query = 'SELECT * FROM customers WHERE 1=1';
-      let params = [];
-      
-      if (category) {
-        query += ' AND category = ?';
-        params.push(category);
-      }
-      
-      if (status) {
-        query += ' AND status = ?';
-        params.push(status);
-      }
-      
-      query += ' ORDER BY created_at DESC';
-      
-      const [rows] = await pool.execute(query, params);
+      const q = (req.query.q || '').trim();
+      const like = `%${q}%`;
+      const [rows] = await pool.execute(
+        'SELECT id,name,created_at FROM customers WHERE name LIKE ? ORDER BY name LIMIT 50',
+        [like]
+      );
       res.json(rows);
     } catch (e) { next(e); }
   });
 
-  // 거래처 수정
-  r.put('/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { code, name, category, ceo, business_no, tel, fax, email, address, note, status } = req.body;
-      
-      await db.query(
-        `UPDATE customers SET 
-          code = ?, name = ?, category = ?, ceo = ?, business_no = ?, 
-          tel = ?, fax = ?, email = ?, address = ?, note = ?, status = ?
-         WHERE id = ?`,
-        [code, name, category, ceo, business_no, tel, fax, email, address, note, status, id]
-      );
-      
-      console.log(`  ✅ 거래처 수정: ${name}`);
-      res.json({ ok: true });
-    } catch (error) {
-      console.error('  ❌ 거래처 수정 오류:', error);
-      res.status(500).json({ ok: false, error: '수정 실패' });
-    }
-  });
-
-  // 거래처 삭제
-  r.delete('/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      await db.query('DELETE FROM customers WHERE id = ?', [id]);
-      
-      console.log(`  ✅ 거래처 삭제: ID ${id}`);
-      res.json({ ok: true });
-    } catch (error) {
-      console.error('  ❌ 거래처 삭제 오류:', error);
-      res.status(500).json({ ok: false, error: '삭제 실패' });
-    }
-  });
-
-  return { handle: r };
+  return r;
 };

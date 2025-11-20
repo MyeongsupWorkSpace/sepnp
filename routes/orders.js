@@ -3,7 +3,7 @@ const express = require('express');
 module.exports = (pool) => {
   const r = express.Router();
 
-  // 수주 등록
+  // 주문 생성
   r.post('/', async (req, res, next) => {
     try {
       const customerId = +(req.body?.customer_id || 0);
@@ -20,15 +20,18 @@ module.exports = (pool) => {
     }
   });
 
-  // 수주 목록 조회
+  // 주문 목록
   r.get('/', async (_req, res, next) => {
     try {
       const [rows] = await pool.execute(
-        'SELECT o.id,o.order_no,o.status,o.created_at,c.name AS customer_name FROM orders o JOIN customers c ON o.customer_id=c.id ORDER BY o.id DESC LIMIT 50'
+        `SELECT o.id,o.order_no,o.status,o.created_at,
+                c.name AS customer_name
+         FROM orders o JOIN customers c ON o.customer_id=c.id
+         ORDER BY o.id DESC LIMIT 50`
       );
       res.json(rows);
     } catch (e) { next(e); }
   });
 
-  return { handle: r };
+  return r;
 };

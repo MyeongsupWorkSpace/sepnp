@@ -38,7 +38,6 @@ CREATE TABLE IF NOT EXISTS orders (
     ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- 인덱스 (중복 실패 시 무시)
-CREATE INDEX idx_suppliers_name ON suppliers(name);
-CREATE INDEX idx_customers_name ON customers(name);
-CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);
+CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
