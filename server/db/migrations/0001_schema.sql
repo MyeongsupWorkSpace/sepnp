@@ -4,8 +4,41 @@ SET time_zone = '+09:00';
 CREATE TABLE IF NOT EXISTS suppliers (
   id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(120) NOT NULL UNIQUE,
-  contact VARCHAR(120), phone VARCHAR(40), email VARCHAR(120),
-  address VARCHAR(255), memo TEXT,
+  contact VARCHAR(120),
+  phone VARCHAR(40),
+  email VARCHAR(120),
+  address VARCHAR(255),
+  memo TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS customers (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(160) NOT NULL UNIQUE,
+  contact VARCHAR(120),
+  phone VARCHAR(40),
+  email VARCHAR(160),
+  address VARCHAR(255),
+  memo TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS orders (
+  id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  customer_id BIGINT UNSIGNED NOT NULL,
+  order_no VARCHAR(64) NOT NULL UNIQUE,
+  status ENUM('pending','processing','done','canceled') NOT NULL DEFAULT 'pending',
+  memo TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_orders_customer
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+    ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- 인덱스 (중복 실패 시 무시)
+CREATE INDEX idx_suppliers_name ON suppliers(name);
+CREATE INDEX idx_customers_name ON customers(name);
+CREATE INDEX idx_orders_status ON orders(status);

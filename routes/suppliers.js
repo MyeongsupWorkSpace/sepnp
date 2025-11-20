@@ -22,12 +22,12 @@ module.exports = (pool) => {
       const q = (req.query.q || '').trim();
       const like = `%${q}%`;
       const [rows] = await pool.execute(
-        'SELECT id,name FROM suppliers WHERE name LIKE ? ORDER BY name LIMIT 50',
+        'SELECT id,name,created_at FROM suppliers WHERE name LIKE ? ORDER BY name LIMIT 50',
         [like]
       );
       res.json(rows);
     } catch (e) { next(e); }
   });
 
-  return r;
+  return { handle: r };
 };

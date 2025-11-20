@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
 app.use(morgan('tiny'));
 
-async function createPoolWithRetry(maxAttempts = 5) {
+async function initPool(retries = 5) {
   let attempt = 0;
   while (true) {
     attempt++;
@@ -22,50 +22,43 @@ async function createPoolWithRetry(maxAttempts = 5) {
         database: process.env.MYSQLDATABASE || 'railway',
         waitForConnections: true,
         connectionLimit: 5,
-        queueLimit: 0
+        connectTimeout: 10000
       });
-      // 테스트 쿼리
       await pool.query('SELECT 1');
-      console.log(`DB 연결 성공 (attempt ${attempt})`);
+      console.log('DB 연결 성공');
       return pool;
     } catch (e) {
-      console.error(`DB 연결 실패 (attempt ${attempt}):`, e.message);
-      if (attempt >= maxAttempts) throw e;
-      await new Promise(r => setTimeout(r, attempt * 1000)); // 점진적 backoff
+      console.error(`DB 연결 실패(${attempt}): ${e.message}`);
+      if (attempt >= retries) throw e;
+      await new Promise(r => setTimeout(r, attempt * 1000));
     }
   }
 }
 
 let pool;
-(async () => {
-  try {
-    pool = await createPoolWithRetry();
-  } catch (e) {
-    console.error('최종 DB 연결 실패:', e.message);
-    process.exit(1);
-  }
-})();
-
-// 헬스체크
-app.get('/api/health', async (_req, res) => {
-  try {
-    await pool.query('SELECT 1');
-    res.json({ ok: true });
-  } catch (e) {
-    res.status(500).json({ ok: false, error: e.message });
-  }
+initPool().then(p => pool = p).catch(e => {
+  console.error('최종 DB 연결 실패 종료:', e.message);
+  process.exit(1);
 });
 
+app.get('/api/health', async (_req, res) => {
+  if (!pool) return res.status(503).json({ ok: false, error: 'DB not ready' });
+  try { await pool.query('SELECT 1'); res.json({ ok: true }); }
+  catch (e) { res.status(500).json({ ok: false, error: e.message }); }
+});
+
+// 라우트 팩토리들 (필요한 것만)
 function mount(name, file) {
-  const routerFactory = require(path.join(__dirname, '..', 'routes', file));
+  const factory = require(path.join(__dirname, '..', 'routes', file));
   app.use(`/api/${name}`, (req, res, next) => {
     if (!pool) return res.status(503).json({ message: 'DB not ready' });
-    return routerFactory(pool)(req, res, next);
+    return factory(pool).handle(req, res, next);
   });
 }
 
-// 필요한 라우트만
 mount('suppliers', 'suppliers.js');
+mount('customers', 'customers.js');
+mount('orders', 'orders.js');
 
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
