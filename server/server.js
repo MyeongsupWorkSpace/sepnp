@@ -24,12 +24,13 @@ function parseDbUrl(url) {
 }
 
 const urlCfg = parseDbUrl(process.env.RAILWAY_DATABASE_URL || '');
+// URL 우선 → 개별 변수는 보조로만 사용
 const dbCfg = {
-  host: process.env.MYSQLHOST || urlCfg?.host,
-  port: +(process.env.MYSQLPORT || urlCfg?.port || 3306),
-  user: process.env.MYSQLUSER || urlCfg?.user || 'root',
-  password: process.env.MYSQLPASSWORD || urlCfg?.password,
-  database: process.env.MYSQLDATABASE || urlCfg?.database || 'railway',
+  host: (urlCfg?.host) || process.env.MYSQLHOST,
+  port: +(urlCfg?.port || process.env.MYSQLPORT || 3306),
+  user: (urlCfg?.user) || process.env.MYSQLUSER || 'root',
+  password: (urlCfg?.password) || process.env.MYSQLPASSWORD,
+  database: (urlCfg?.database) || process.env.MYSQLDATABASE || 'railway',
   ssl: process.env.MYSQLSSL === '1' ? { rejectUnauthorized: false } : undefined
 };
 
@@ -81,7 +82,11 @@ let pool;
 app.get('/api/dbinfo', async (_req, res) => {
   res.json({
     ready: !!pool,
-    cfg: { host: dbCfg.host, port: dbCfg.port, user: dbCfg.user, database: dbCfg.database, ssl: !!dbCfg.ssl, password: dbCfg.password ? '***' : null },
+    cfg: {
+      host: dbCfg.host, port: dbCfg.port, user: dbCfg.user,
+      database: dbCfg.database, ssl: !!dbCfg.ssl,
+      password: dbCfg.password ? '***' : null
+    },
     dns: await dnsResolve(dbCfg.host)
   });
 });
@@ -92,7 +97,7 @@ app.get('/api/health', async (_req, res) => {
   catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// 간단 API (저장 확인용)
+// 간단 API
 app.post('/api/suppliers', async (req, res, next) => {
   try {
     if (!pool) return res.status(503).json({ message: 'DB not ready' });
@@ -111,7 +116,9 @@ app.get('/api/suppliers', async (req, res, next) => {
     if (!pool) return res.status(503).json({ message: 'DB not ready' });
     const q = (req.query.q || '').trim();
     const like = `%${q}%`;
-    const [rows] = await pool.execute('SELECT id,name,created_at FROM suppliers WHERE name LIKE ? ORDER BY name LIMIT 50', [like]);
+    const [rows] = await pool.execute(
+      'SELECT id,name,created_at FROM suppliers WHERE name LIKE ? ORDER BY name LIMIT 50', [like]
+    );
     res.json(rows);
   } catch (e) { next(e); }
 });

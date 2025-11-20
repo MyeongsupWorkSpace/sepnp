@@ -18,11 +18,11 @@ function parseDbUrl(url) {
 (async () => {
   const urlCfg = parseDbUrl(process.env.RAILWAY_DATABASE_URL || '');
   const cfg = {
-    host: process.env.MYSQLHOST || urlCfg?.host,
-    port: +(process.env.MYSQLPORT || urlCfg?.port || 3306),
-    user: process.env.MYSQLUSER || urlCfg?.user || 'root',
-    password: process.env.MYSQLPASSWORD || urlCfg?.password,
-    database: process.env.MYSQLDATABASE || urlCfg?.database || 'railway',
+    host: (urlCfg?.host) || process.env.MYSQLHOST,
+    port: +(urlCfg?.port || process.env.MYSQLPORT || 3306),
+    user: (urlCfg?.user) || process.env.MYSQLUSER || 'root',
+    password: (urlCfg?.password) || process.env.MYSQLPASSWORD,
+    database: (urlCfg?.database) || process.env.MYSQLDATABASE || 'railway',
     multipleStatements: true,
     ssl: process.env.MYSQLSSL === '1' ? { rejectUnauthorized: false } : undefined
   };
