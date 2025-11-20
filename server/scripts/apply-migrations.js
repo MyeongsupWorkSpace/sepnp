@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
-function parseDbUrl(url) {
+function parseUrl(url) {
   try {
     const u = new URL(url);
     return {
@@ -16,13 +16,13 @@ function parseDbUrl(url) {
 }
 
 (async () => {
-  const urlCfg = parseDbUrl(process.env.RAILWAY_DATABASE_URL || '');
+  const urlCfg = parseUrl(process.env.RAILWAY_DATABASE_URL || '');
   const cfg = {
-    host: (urlCfg?.host) || process.env.MYSQLHOST,
-    port: +(urlCfg?.port || process.env.MYSQLPORT || 3306),
-    user: (urlCfg?.user) || process.env.MYSQLUSER || 'root',
-    password: (urlCfg?.password) || process.env.MYSQLPASSWORD,
-    database: (urlCfg?.database) || process.env.MYSQLDATABASE || 'railway',
+    host: urlCfg?.host,
+    port: urlCfg?.port || 3306,
+    user: urlCfg?.user || 'root',
+    password: urlCfg?.password,
+    database: urlCfg?.database || 'railway',
     multipleStatements: true,
     ssl: process.env.MYSQLSSL === '1' ? { rejectUnauthorized: false } : undefined
   };

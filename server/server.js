@@ -10,7 +10,7 @@ app.use(express.json());
 app.use(cors({ origin: true }));
 app.use(morgan('tiny'));
 
-function parseDbUrl(url) {
+function parseUrl(url) {
   try {
     const u = new URL(url);
     return {
@@ -23,18 +23,17 @@ function parseDbUrl(url) {
   } catch { return null; }
 }
 
-const urlCfg = parseDbUrl(process.env.RAILWAY_DATABASE_URL || '');
-// URL 우선 → 개별 변수는 보조로만 사용
+const urlCfg = parseUrl(process.env.RAILWAY_DATABASE_URL || '');
 const dbCfg = {
-  host: (urlCfg?.host) || process.env.MYSQLHOST,
-  port: +(urlCfg?.port || process.env.MYSQLPORT || 3306),
-  user: (urlCfg?.user) || process.env.MYSQLUSER || 'root',
-  password: (urlCfg?.password) || process.env.MYSQLPASSWORD,
-  database: (urlCfg?.database) || process.env.MYSQLDATABASE || 'railway',
+  host: urlCfg?.host,
+  port: urlCfg?.port,
+  user: urlCfg?.user,
+  password: urlCfg?.password,
+  database: urlCfg?.database,
   ssl: process.env.MYSQLSSL === '1' ? { rejectUnauthorized: false } : undefined
 };
 
-console.log('[DB CONFIG INIT]', {
+console.log('[DB CONFIG]', {
   host: dbCfg.host, port: dbCfg.port, user: dbCfg.user,
   database: dbCfg.database, passwordSet: !!dbCfg.password, sslEnabled: !!dbCfg.ssl
 });
@@ -46,7 +45,7 @@ async function dnsResolve(host) {
   });
 }
 
-async function connectWithRetry(max = 6) {
+async function connectRetry(max = 6) {
   for (let i = 1; i <= max; i++) {
     try {
       const pool = mysql.createPool({
@@ -61,10 +60,10 @@ async function connectWithRetry(max = 6) {
         connectTimeout: 15000
       });
       await pool.query('SELECT 1');
-      console.log(`[DB] 연결 성공 attempt ${i}`);
+      console.log('[DB] 연결 성공 attempt', i);
       return pool;
     } catch (e) {
-      console.error(`[DB] 연결 실패 attempt ${i}:`, e.code || e.message);
+      console.error('[DB] 연결 실패 attempt', i, e.code || e.message);
       if (i === max) throw e;
       await new Promise(r => setTimeout(r, i * 1500));
     }
@@ -74,11 +73,10 @@ async function connectWithRetry(max = 6) {
 let pool;
 (async () => {
   console.log('[DNS RESOLVE]', await dnsResolve(dbCfg.host));
-  try { pool = await connectWithRetry(); }
+  try { pool = await connectRetry(); }
   catch (e) { console.error('[DB] 최종 실패:', e.message); }
 })();
 
-// 진단
 app.get('/api/dbinfo', async (_req, res) => {
   res.json({
     ready: !!pool,
@@ -97,7 +95,6 @@ app.get('/api/health', async (_req, res) => {
   catch (e) { res.status(500).json({ ok: false, error: e.message }); }
 });
 
-// 간단 API
 app.post('/api/suppliers', async (req, res, next) => {
   try {
     if (!pool) return res.status(503).json({ message: 'DB not ready' });
